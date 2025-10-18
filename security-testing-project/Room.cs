@@ -1,5 +1,6 @@
-using security_testing_project;
-public sealed class Room
+namespace security_testing_project;
+
+public class Room
 {
     public string Name { get; }
     public string Description { get; set; }

@@ -10,14 +10,14 @@ public sealed class World
     public bool IsGameOver { get; private set; }
     public bool IsWin { get; private set; }
 
-    public void AddRoom(Room r) => _rooms[r.Name] = r;
+    public void AddRoom(Room room) => _rooms[room.Name] = room;
     private Room Get(string name) => _rooms[name];
 
     public void Connect(string from, Direction direction, string to)
     {
-        var a = Get(from);
-        var b = Get(to);
-        a.Exits[direction] = b;
+        Room roomA = Get(from);
+        Room roomB = Get(to);
+        roomA.Exits[direction] = roomB;
     }
 
     public void SetStart(string roomName) => Current = Get(roomName);
