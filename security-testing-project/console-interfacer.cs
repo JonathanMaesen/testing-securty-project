@@ -7,19 +7,16 @@ namespace security_testing_project
     {
         private Dictionary<string, Action<T>> Commands { get; set; }
 
-        private Dictionary<string, string> Commandswithdescription { get; set; }
-
-        public Consoleinterfacer(Dictionary<string, Action<T>> list, Dictionary<string, string> listwithdescription)
+        public Consoleinterfacer(Dictionary<string, Action<T>> list)
         {
             Commands = new Dictionary<string, Action<T>>(list);
-            Commandswithdescription = new(listwithdescription);
-            foreach (var item in Commands)
-            {
-                if (!Commandswithdescription.TryGetValue(item.Key, out var f)) 
+            Commands.Add("help", (T) => {
+                foreach (var item in list)
                 {
-                    throw new Exception($"Function with {item.Key} not found in list with descriptions");
+                    Console.Write(item.Key);
                 }
-            }
+                Console.WriteLine();
+            });
         }
 
         public void TryCommand(string command, T value)
