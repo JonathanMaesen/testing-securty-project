@@ -3,7 +3,7 @@
 ### todo's
 - [ ]  kamers
 - [ ]  combat
-- [ ]  commando's
+- [X]  commando's
 
 ### testing
 testing per deel
