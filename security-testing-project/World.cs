@@ -1,6 +1,17 @@
 namespace security_testing_project;
 
-public sealed class World
+public interface IGameworld
+{
+    string Look();
+    string Take(string itemName);
+    string Go(Direction dir);
+    string Fight();
+    bool IsGameOver { get; }
+    bool IsWin { get; }
+
+}
+
+public sealed class World :  IGameworld
 {
     private readonly Dictionary<string, Room> _rooms = new(StringComparer.OrdinalIgnoreCase);
 
