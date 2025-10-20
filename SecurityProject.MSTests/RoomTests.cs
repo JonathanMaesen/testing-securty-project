@@ -51,7 +51,13 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void DescribeMonsters()
         {
-            var room = new Room("Lair", "Bones everywhere");
+            var room = new Room("Lair", "Bones everywhere")
+            {
+                IsDeadly = false,
+                RequiresKey = false,
+                IsUnlocked = false,
+                Monster = null
+            };
             room.Monster = new Monster("Goblin", true, 2);
 
             var text = room.Describe();

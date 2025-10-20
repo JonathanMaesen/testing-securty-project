@@ -11,4 +11,6 @@ public sealed class Direction
 
     public DirectionEnum Value { get; }
     private Direction(DirectionEnum value) => Value = value;
+    
+    public override string ToString() => Value.ToString();
 }
