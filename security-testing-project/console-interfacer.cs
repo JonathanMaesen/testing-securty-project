@@ -19,7 +19,7 @@ namespace security_testing_project
             });
         }
 
-        public void TryCommand(string command, T value)
+        public void TryCommand(string command, T? value = default)
         {
             if (!Commands.TryGetValue(command, out var f))
             {
