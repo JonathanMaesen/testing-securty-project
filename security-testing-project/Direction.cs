@@ -9,7 +9,7 @@ public sealed class Direction
     public static readonly Direction Left = new(DirectionEnum.Left);
     public static readonly Direction Right = new(DirectionEnum.Right);
 
-    public DirectionEnum Value { get; }
+    private DirectionEnum Value { get; }
     private Direction(DirectionEnum value) => Value = value;
     
     public override string ToString() => Value.ToString();

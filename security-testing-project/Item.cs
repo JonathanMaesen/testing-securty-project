@@ -11,5 +11,6 @@ public class Item
     {
         Name = name;
         Description = description;
+        Type = type;
     }
 }
