@@ -1,5 +1,14 @@
 namespace security_testing_project;
 
+#region Class Summary
+/// <summary>
+/// This class defines a Room, the fundamental building block of the game world.
+/// Each room has a name and description, and can contain items, a monster, and exits
+/// to other rooms. It also includes properties for special conditions, like whether
+/// it's a deadly trap or requires a key.
+/// </summary>
+#endregion
+
 public class Room
 {
     public string Name { get; }
@@ -25,7 +34,7 @@ public class Room
         };
         if (IsDeadly) lines.Add("(A deadly presence lingers here.)");
         if (RequiresKey && !IsUnlocked) lines.Add("The door is locked. You need a key.");
-        if (Monster != null) lines.Add($"You sense danger: a {Monster.Name} is here.");
+        if (Monster is { IsAlive: true }) lines.Add($"You sense danger: a {Monster.Name} is here.");
         if (Items.Count > 0) lines.Add("You see: " + string.Join(", ", Items.Select(i => i.Name)));
         if (Exits.Count > 0) lines.Add("Exits: " + string.Join(", ", Exits.Keys));
         return string.Join(Environment.NewLine, lines);

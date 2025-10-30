@@ -10,14 +10,14 @@ public class Monster
     public bool IsAlive { get; set; }
     public object MaxHp { get; set; }
 
-    public Monster(string name, bool isAlive, object maxHp)
+    public Monster(string name, bool isAlive, int maxHp)
     {
         Name = name;
         IsAlive = isAlive;
         MaxHp = maxHp;
     }
     
-    public void ReceiveDamage(object maxHp)
+    public void ReceiveDamage(int maxHp)
     {
         throw new NotImplementedException();
     }
