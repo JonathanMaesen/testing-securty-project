@@ -23,7 +23,7 @@ public class Room
             $"== {Name} ==",
             Description
         };
-        if (IsDeadly) lines.Add("(A deadly presence lingers here.)");
+        if (IsDeadly) lines.Add("(A deadly presence lingers here)");
         if (RequiresKey && !IsUnlocked) lines.Add("The door is locked. You need a key.");
         if (Monster != null) lines.Add($"You sense danger: a {Monster.Name} is here.");
         if (Items.Count > 0) lines.Add("You see: " + string.Join(", ", Items.Select(i => i.Name)));
