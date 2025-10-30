@@ -4,20 +4,12 @@ public enum MonsterEnum
 {
     Rat, Goblin, Skeleton, Troll, Vampire, Dragon
 }
-public class Monster
+public class Monster(string name, bool isAlive)
 {
-    public string Name { get; set; }
-    public bool IsAlive { get; set; }
-    public object MaxHp { get; set; }
+    public string Name { get; set; } = name;
+    public bool IsAlive { get; private set; } = isAlive;
 
-    public Monster(string name, bool isAlive, int maxHp)
-    {
-        Name = name;
-        IsAlive = isAlive;
-        MaxHp = maxHp;
-    }
-    
-    public void ReceiveDamage(int maxHp)
+    public void ReceiveDamage()
     {
         IsAlive = false;
     }

@@ -29,6 +29,7 @@ internal static class Program
                 break;
             }
         
+            Console.Clear();
             terminal.TryCommand(command, arg);
         
             if (world.IsWin)
@@ -42,6 +43,7 @@ internal static class Program
                 Console.WriteLine("\nGame Over. Restarting the game...");
                 Thread.Sleep(2000); 
                 world = CreateTestWorld();
+                terminal = SetupCommands(world);
                 Console.Clear();
                 Console.WriteLine("A new adventure begins...");
                 Console.WriteLine(world.Look());
@@ -51,7 +53,7 @@ internal static class Program
 
     private static CommandManager<string?> SetupCommands(World world)
     {
-        var terminal = new CommandManager<string?>();
+        var terminal = new CommandManager<string?>(() => Console.WriteLine(world.Look()));
 
         terminal.AddCommand("look", _ => Console.WriteLine(world.Look()), "Show the inventory, current room, items in the room, and exits.");
         terminal.AddCommand("inventory", _ => Console.WriteLine(world.GetInventoryDescription()), "Show only the inventory.");
@@ -106,7 +108,10 @@ internal static class Program
         };
         world.AddRoom(deadlyPit);
 
-        var keyRoom = new Room("Key Room", "You are in a small room. There is a shiny key on a pedestal.");
+        var keyRoom = new Room("Key Room", "You are in a small room. There is a shiny key on a pedestal.")
+        {
+            DescriptionWhenEmpty = "You are in a small room with an empty pedestal."
+        };
         keyRoom.Items.Add(new Item("key", "A shiny key.", ItemType.Key));
         world.AddRoom(keyRoom);
 
@@ -116,13 +121,17 @@ internal static class Program
         };
         world.AddRoom(treasureRoom);
 
-        var swordRoom = new Room("Sword Room", "This room has an old sword lying on the ground.");
+        var swordRoom = new Room("Sword Room", "This room has an old sword lying on the ground.")
+        {
+            DescriptionWhenEmpty = "This room is empty. The sword is gone."
+        };
         swordRoom.Items.Add(new Item("sword", "A trusty sword.", ItemType.Weapon));
         world.AddRoom(swordRoom);
 
         var monsterRoom = new Room("Monster Lair", "A fearsome goblin blocks your path!")
         {
-            Monster = new Monster("Goblin",true, 10)
+            Monster = new Monster("Goblin",true),
+            DescriptionWhenMonsterDefeated = "The room is quiet now that the goblin has been defeated."
         };
         world.AddRoom(monsterRoom);
     

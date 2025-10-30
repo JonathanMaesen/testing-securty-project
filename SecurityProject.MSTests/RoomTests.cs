@@ -58,7 +58,7 @@ namespace SecurityProject.MSTests
                 IsUnlocked = false,
                 Monster = null
             };
-            room.Monster = new Monster("Goblin", true, 2);
+            room.Monster = new Monster("Goblin", true);
 
             var text = room.Describe();
 

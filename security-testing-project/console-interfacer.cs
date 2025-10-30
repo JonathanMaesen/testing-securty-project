@@ -3,9 +3,11 @@
     public class CommandManager<T>
     {
         private readonly Dictionary<string, (Action<T> Action, string Description)> _commands = new();
+        private readonly Action? _onUnknownCommand;
 
-        public CommandManager()
+        public CommandManager(Action? onUnknownCommand = null)
         {
+            _onUnknownCommand = onUnknownCommand;
             AddCommand("help", _ =>
             {
                 Console.WriteLine("\nAvailable commands:");
@@ -22,11 +24,12 @@
             if (!_commands.TryGetValue(command, out var cmd))
             {
                 Console.WriteLine($"Unknown command: {command}");
+                _onUnknownCommand?.Invoke();
                 return;
             }
             try
             {
-                cmd.Action(value);
+                cmd.Action(value!);
             }
             catch (Exception ex)
             {
