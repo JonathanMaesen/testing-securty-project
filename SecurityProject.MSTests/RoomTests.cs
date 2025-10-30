@@ -23,7 +23,7 @@ namespace SecurityProject.MSTests
 
             var text = room.Describe();
 
-            StringAssert.Contains(text, "(A deadly presence lingers here.)");
+            StringAssert.Contains(text, "(A deadly presence lingers here)");
         }
 
         [TestMethod]
