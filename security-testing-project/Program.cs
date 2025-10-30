@@ -4,17 +4,24 @@ class Program
 {
     static void Main(string[] args)
     {
-        Dictionary<string, Action<string[]>> commands = new Dictionary<string, Action<string[]>>();
-        //commands.Add("what", void (string[] v) => { Console.WriteLine("Yes"); });
-        Consoleinterfacer<string[]> terminal = new(commands);
+        Dictionary<string, Action<char>> commands = new Dictionary<string, Action<char>>();
 
-        while (true)
+        commands.Add("exit", (char v) => { Console.WriteLine("Bye!"); });
+
+        Consoleinterfacer<char> terminal = new(commands);
+
+        bool continueloop = true;
+        while (continueloop)
         {
             Console.Write("> ");
             string userinput = Console.ReadLine();
             string[] spilts = userinput.Split(" ");
             string command = spilts[0];
-            terminal.TryCommand(command, []);
+            if (command == "exit") 
+            {
+                continueloop = false;
+            }
+            terminal.TryCommand(command);
         }
     }
 }
