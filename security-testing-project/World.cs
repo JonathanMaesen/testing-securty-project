@@ -47,6 +47,19 @@ public sealed class World :  IGameworld
 
     public string Fight()
     {
-        throw new NotImplementedException();
+        if (Current.Monster == null)
+            return "There is nothing to fight here.";
+
+        if (!Current.Monster.IsAlive)
+            return $"The {Current.Monster.Name} is already defeated.";
+        if (!Player.Inventory.HasType(ItemType.Weapon))
+        {
+            Player.IsAlive = false;
+            IsGameOver = true;
+            return $"You try to fight the {Current.Monster.Name} without a weapon and die.";
+        }
+        
+        Current.Monster.ReceiveDamage(Current.Monster.MaxHp);
+        return $"You strike the {Current.Monster.Name} and defeat it!";
     }
 }

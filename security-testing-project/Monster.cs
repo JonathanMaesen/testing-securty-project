@@ -19,7 +19,7 @@ public class Monster
     
     public void ReceiveDamage(object maxHp)
     {
-        throw new NotImplementedException();
+        IsAlive = false;
     }
     
 }
