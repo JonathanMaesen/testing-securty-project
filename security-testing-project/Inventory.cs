@@ -1,23 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace security_testing_project;
 
-namespace security_testing_project
+public class PlayerInventory
 {
-    internal class Inventory
+    public void AddItem(Item item)
     {
-        private readonly Dictionary<string, Item> _items = new();
+        throw new NotImplementedException();
+    }
 
-        public void Add(Item item)
-        {
-            _items[item.Id] = item;
-        }
-
-        public bool Has(string id)
-        {
-            return _items.ContainsKey(id);
-        }
+    public bool HasType(ItemType key)
+    {
+        throw new NotImplementedException();
     }
 }

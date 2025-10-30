@@ -1,22 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace security_testing_project;
 
-namespace security_testing_project
+public enum ItemType { Misc, Key, Weapon }
+
+public class Item
 {
-    internal class Item
+    public string Name { get; set; }
+    public ItemType Type { get; set; }
+    public string Description { get; set; }
+    public Item(string name, string description, ItemType type = ItemType.Misc)
     {
-        public string Id { get; }
-        public string Name { get; }
-        public string Description { get; }
-
-        public Item(string id, string name, string description)
-        {
-            Id = id;
-            Name = name;
-            Description = description;
-        }
+        Name = name;
+        Description = description;
     }
 }

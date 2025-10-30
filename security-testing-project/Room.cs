@@ -1,24 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace security_testing_project;
 
-namespace security_testing_project
+public class Room
 {
-    internal class Room
+    public string Name { get; }
+    public string Description { get; set; }
+    public bool IsDeadly { get; set; }
+    public bool RequiresKey { get; set; }
+    public bool IsUnlocked { get; set; }
+    public List<Item> Items { get; } = new();
+    public Monster? Monster { get; set; }
+    public Dictionary<Direction, Room> Exits { get; } = new();
+    public Room(string name, string description)
     {
-        public string Id { get; }
-        public string Name { get; }
-        public string Description { get; }
-        public bool HasMonster { get; set; }
+        Name = name;
+        Description = description;
+    }
 
-        public Room(string id, string name, string description, bool hasMonster = false)
+    public string Describe()
+    {
+        var lines = new List<string>
         {
-            Id = id;
-            Name = name;
-            Description = description;
-            HasMonster = hasMonster;
-        }
+            $"== {Name} ==",
+            Description
+        };
+        if (IsDeadly) lines.Add("(A deadly presence lingers here.)");
+        if (RequiresKey && !IsUnlocked) lines.Add("The door is locked. You need a key.");
+        if (Monster != null) lines.Add($"You sense danger: a {Monster.Name} is here.");
+        if (Items.Count > 0) lines.Add("You see: " + string.Join(", ", Items.Select(i => i.Name)));
+        if (Exits.Count > 0) lines.Add("Exits: " + string.Join(", ", Exits.Keys));
+        return string.Join(Environment.NewLine, lines);
     }
 }
