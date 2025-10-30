@@ -1,34 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace security_testing_project
-{
-    public class Consoleinterfacer<T>
+﻿namespace security_testing_project
+{ 
+    public class CommandManager<T>
     {
-        private Dictionary<string, Action<T>> Commands { get; set; }
+        private readonly Dictionary<string, (Action<T> Action, string Description)> _commands = new();
 
-        public Consoleinterfacer(Dictionary<string, Action<T>> list)
+        public CommandManager()
         {
-            Commands = new Dictionary<string, Action<T>>(list);
-            Commands.Add("help", (T) => {
-                foreach (var item in list)
+            AddCommand("help", _ =>
+            {
+                Console.WriteLine("\nAvailable commands:");
+                foreach (var (name, (_, description)) in _commands.OrderBy(c => c.Key))
                 {
-                    Console.Write(item.Key);
+                    var commandName = name.PadRight(10);
+                    Console.WriteLine($"- {commandName}{description}");
                 }
-                Console.WriteLine();
-            });
+            }, "Show a list of commands.");
         }
-
+    
         public void TryCommand(string command, T? value = default)
         {
-            if (!Commands.TryGetValue(command, out var f))
+            if (!_commands.TryGetValue(command, out var cmd))
             {
                 Console.WriteLine($"Unknown command: {command}");
                 return;
             }
             try
             {
-                f(value);
+                cmd.Action(value);
             }
             catch (Exception ex)
             {
@@ -38,10 +36,10 @@ namespace security_testing_project
 
         public void AddCommand(string name, Action<T> action, string description)
         {
-            if (Commands.ContainsKey(name))
+            if (_commands.ContainsKey(name))
                 throw new InvalidOperationException($"Command '{name}' already exists.");
 
-            Commands.Add(name, action);
+            _commands.Add(name, (action, description));
         }
     }
 }

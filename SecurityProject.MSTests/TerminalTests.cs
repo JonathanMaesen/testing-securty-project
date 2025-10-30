@@ -1,39 +1,30 @@
 ﻿using security_testing_project;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace SecurityProject.MSTests
 {
     [TestClass]
     public class ConsoleInterfacerTests
     {
-        private StringWriter consoleOutput;
+        private StringWriter _consoleOutput;
 
         [TestInitialize]
         public void Setup()
         {
-            consoleOutput = new StringWriter();
-            Console.SetOut(consoleOutput);
+            _consoleOutput = new StringWriter();
+            Console.SetOut(_consoleOutput);
         }
 
         [TestCleanup]
         public void Cleanup()
         {
-            consoleOutput.Dispose();
+            _consoleOutput.Dispose();
         }
 
         [TestMethod]
         public void TryCommand_ValidCommand_ExecutesAction()
         {
-            bool executed = false;
-            var cmds = new Dictionary<string, Action<int>>
-            {
-                { "test", (i) => executed = true }
-            };
-            var interfacer = new Consoleinterfacer<int>(cmds);
+            var executed = false;
+            var interfacer = new CommandManager<int>();
+            interfacer.AddCommand("test", _ => executed = true, "A test command");
 
             interfacer.TryCommand("test", 123);
 
@@ -43,28 +34,24 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void TryCommand_UnknownCommand_ShowsErrorMessage()
         {
-            var cmds = new Dictionary<string, Action<int>>();
-            var interfacer = new Consoleinterfacer<int>(cmds);
+            var interfacer = new CommandManager<int>();
 
             interfacer.TryCommand("nope");
 
-            var output = consoleOutput.ToString().Trim();
+            var output = _consoleOutput.ToString().Trim();
             StringAssert.Contains(output, "Unknown command: nope");
         }
 
         [TestMethod]
         public void HelpCommand_PrintsAllCommands()
         {
-            var cmds = new Dictionary<string, Action<int>>
-            {
-                { "cmd1", (x)=>{} },
-                { "cmd2", (x)=>{} }
-            };
-            var interfacer = new Consoleinterfacer<int>(cmds);
+            var interfacer = new CommandManager<int>();
+            interfacer.AddCommand("cmd1", _ => {}, "desc1");
+            interfacer.AddCommand("cmd2", _ => {}, "desc2");
 
-            interfacer.TryCommand("help", 0);
+            interfacer.TryCommand("help");
 
-            var output = consoleOutput.ToString();
+            var output = _consoleOutput.ToString();
             StringAssert.Contains(output, "cmd1");
             StringAssert.Contains(output, "cmd2");
         }
@@ -72,33 +59,28 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void AddCommand_DuplicateName_ThrowsException()
         {
-            var cmds = new Dictionary<string, Action<int>>();
-            var interfacer = new Consoleinterfacer<int>(cmds);
+            var interfacer = new CommandManager<int>();
 
-            interfacer.AddCommand("test", (i) => { }, "desc");
+            interfacer.AddCommand("test", _ => { }, "desc");
 
             Assert.ThrowsException<InvalidOperationException>(() =>
-                interfacer.AddCommand("test", (i) => { }, "desc2")
+                interfacer.AddCommand("test", _ => { }, "desc2")
             );
         }
 
         [TestMethod]
         public void TryCommand_CommandThrows_PrintsErrorMessage()
         {
+            const string command = "break";
+            const string errorMessage = "this is an error";
 
-            string command = "break";
-            string errormessage = "this is an error";
-
-            var cmds = new Dictionary<string, Action<int>>
-            {
-                { command, (i) => throw new Exception(errormessage) }
-            };
-            var interfacer = new Consoleinterfacer<int>(cmds);
+            var interfacer = new CommandManager<int>();
+            interfacer.AddCommand(command, _ => throw new Exception(errorMessage), "breaks");
 
             interfacer.TryCommand(command);
 
-            var output = consoleOutput.ToString();
-            StringAssert.Contains(output, $"Error executing command '{command}': {errormessage}");
+            var output = _consoleOutput.ToString();
+            StringAssert.Contains(output, $"Error executing command '{command}': {errorMessage}");
         }
     }
 }

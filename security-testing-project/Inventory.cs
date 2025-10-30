@@ -10,6 +10,16 @@ public class PlayerInventory
 
     public bool HasType(ItemType key)
     {
-        return _items.Any(item => item.Type == key);
+        return _items.Any(i => i.Type == key);
+    }
+
+    public string Describe()
+    {
+        if (_items.Count == 0)
+        {
+            return "Your inventory is empty.";
+        }
+        var itemNames = string.Join(", ", _items.Select(i => i.Name));
+        return $"You are carrying: {itemNames}";
     }
 }
