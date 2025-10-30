@@ -50,7 +50,7 @@ public sealed class World : IGameworld
 
         Current.Items.Remove(item);
         Player.Inventory.AddItem(item);
-        return $"You took the {item.Name}.";
+        return $"You took the {item.Name}.\n{Look()}";
     }
 
     public string Go(Direction dir)
@@ -90,6 +90,11 @@ public sealed class World : IGameworld
             }
             Current = nextRoom;
 
+            if (Current.Monster is { IsAlive: true })
+            {
+                return Fight();
+            }
+
             if (Current.Name == "Treasure Room")
             {
                 IsWin = true;
@@ -97,11 +102,22 @@ public sealed class World : IGameworld
 
             return Look();
         }
-        return "You can't go that way.";
+        return $"You can't go that way. \n{Look()}";
     }
 
     public string Fight()
     {
-        throw new NotImplementedException();
+        if (Current.Monster == null)
+            return "There is nothing to fight here.";
+
+        if (!Current.Monster.IsAlive)
+            return $"The {Current.Monster.Name} is already defeated.";
+        if (!Player.Inventory.HasType(ItemType.Weapon))
+        {
+            IsGameOver = true;
+            return $"A {Current.Monster.Name} attacks! You are defenseless without a weapon and die.";
+        }
+        Current.Monster.ReceiveDamage();
+        return $"You fight the {Current.Monster.Name} and defeat it!\n{Look()}";
     }
 }
