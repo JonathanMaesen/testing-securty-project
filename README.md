@@ -1,8 +1,8 @@
 # Text game
 
 ### todo's
-- [ ]  kamers
-- [ ]  combat
+- [X]  kamers
+- [X]  combat
 - [X]  commando's
 
 ### testing
