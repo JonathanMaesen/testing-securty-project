@@ -1,6 +1,7 @@
 # Text-Based Adventure Game Documentation
 
 Made by Sander De Moor, Nils Mertens, & Jonathan Maesen
+GitHub: https://github.com/JonathanMaesen/testing-securty-project
 ---
 
 ## 1. World Structure
