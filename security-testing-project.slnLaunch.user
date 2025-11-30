@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "FullAplication",
+    "Projects": [
+      {
+        "Path": "security-testing-project\\security-testing-project.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "API\\API.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
