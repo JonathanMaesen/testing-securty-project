@@ -1,0 +1,93 @@
+### Text Adventure API Test File
+### Pas de poort aan naar jouw localhost poort (check terminal bij dotnet run)
+@API_HostAddress = http://localhost:5263
+@token = 
+
+### 1. Health Check (verwijder de weatherforecast endpoint als die niet bestaat)
+GET {{API_HostAddress}}/
+Accept: application/json
+
+###
+
+### 2. Registreer een Player
+POST {{API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "speler1",
+  "password": "wachtwoord123",
+  "role": "Player"
+}
+
+###
+
+### 3. Registreer een Admin
+POST {{API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "admin1",
+  "password": "adminpass123",
+  "role": "Admin"
+}
+
+###
+
+### 4. Login als Player (kopieer de token uit de response!)
+POST {{API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "speler1",
+  "password": "wachtwoord123"
+}
+
+###
+
+### 5. Login als Admin (kopieer de token uit de response!)
+POST {{API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin1",
+  "password": "adminpass123"
+}
+
+###
+
+### 6. Test foute login (3x voor lockout)
+POST {{API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "speler1",
+  "password": "foutWachtwoord"
+}
+
+###
+
+### 7. Huidige gebruiker info (vervang TOKEN door jouw JWT token)
+GET {{API_HostAddress}}/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4xIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJqdGkiOiIxN2E4ZjEwMS05MWFhLTQ4NGYtYTJmMS1hNWQ5YmJmYzNhYWYiLCJleHAiOjE3NjQ2MDI5MTIsImlzcyI6IlRleHRBZHZlbnR1cmVBUEkiLCJhdWQiOiJUZXh0QWR2ZW50dXJlQ2xpZW50In0.O9lJqhguA5y7W0dQuy0dW5ofj8BDzf2ud36m-dn7Exo
+Accept: application/json
+
+###
+
+### 8. Keyshare ophalen - room_secret (Player mag dit)
+GET {{API_HostAddress}}/api/keys/keyshare/room_secret
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4xIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJqdGkiOiIxN2E4ZjEwMS05MWFhLTQ4NGYtYTJmMS1hNWQ5YmJmYzNhYWYiLCJleHAiOjE3NjQ2MDI5MTIsImlzcyI6IlRleHRBZHZlbnR1cmVBUEkiLCJhdWQiOiJUZXh0QWR2ZW50dXJlQ2xpZW50In0.O9lJqhguA5y7W0dQuy0dW5ofj8BDzf2ud36m-dn7Exo
+Accept: application/json
+
+###
+
+### 9. Keyshare ophalen - room_treasure (Player mag dit)
+GET {{API_HostAddress}}/api/keys/keyshare/room_treasure
+Authorization: Bearer TOKEN
+Accept: application/json
+
+###
+
+### 10. Keyshare ophalen - room_admin (alleen Admin mag dit!)
+GET {{API_HostAddress}}/api/keys/keyshare/room_admin
+Authorization: Bearer TOKEN
+Accept: application/json
