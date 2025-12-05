@@ -69,6 +69,36 @@ public sealed class World : IGameworld
                 return "You fall into a deadly pit and die.";
             }
 
+            if (nextRoom.IsEncrypted && nextRoom.DecryptedContent == string.Empty)
+            {
+                string simulatedUserRole = "Player"; 
+                
+                string roomId = nextRoom.EncryptedContentFile?.Replace(".enc", "") ?? "unknown";
+                string keyshare = GetSimulatedKeyShare(roomId, simulatedUserRole); 
+
+                if (string.IsNullOrEmpty(keyshare))
+                {
+                    return "De kamer is versleuteld en u bent niet geautoriseerd om de keyshare op te halen (Rol te laag).";
+                }
+
+                string decryptionKey = CryptoHelper.GenerateDecryptionKey(keyshare);
+
+                if (CryptoHelper.TryDecryptRoomContent(nextRoom.EncryptedContentFile!, decryptionKey, out var decryptedContent))
+                {
+                    nextRoom.DecryptedContent = decryptedContent;
+                    Current = nextRoom;
+                    return $"Succes! De kamerinhoud is ontsleuteld met de Keyshare.\n{Look()}";
+                }
+                else
+                {
+                    return "Decryptie mislukt. De sleutel is onjuist of het bestand is beschadigd.";
+                }
+            }
+            else if (nextRoom.IsEncrypted && nextRoom.DecryptedContent != string.Empty)
+            {
+                 Current = nextRoom;
+                 return Look();
+            }
             if (nextRoom is { RequiresKey: true, IsUnlocked: false })
             {
                 if (Player.Inventory.HasType(ItemType.Key))
@@ -119,5 +149,26 @@ public sealed class World : IGameworld
         }
         Current.Monster.ReceiveDamage();
         return $"You fight the {Current.Monster.Name} and defeat it!\n{Look()}";
+    }
+
+    private string GetSimulatedKeyShare(string roomId, string userRole)
+    {
+        const string roomSecretShare = "SecretKeyShare123ForRoom1";
+        const string roomAdminShare = "AdminOnlyKeyShare789ForRoom3";
+
+        if (roomId.Equals("room_secret", StringComparison.OrdinalIgnoreCase))
+        {
+            return roomSecretShare;
+        }
+
+        if (roomId.Equals("room_admin", StringComparison.OrdinalIgnoreCase))
+        {
+            if (userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return roomAdminShare;
+            }
+        }
+        
+        return string.Empty;
     }
 }
