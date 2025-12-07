@@ -4,3 +4,23 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 **/.vs/
+
+# User-specific files
+*.user
+*.suo
+
+# Build results
+[Bb]in/
+[Oo]bj/
+
+# Rider files
+.idea/
+
+# Dotnet-suggest temp file
+.dotnet-suggest.json
+
+# Rider temp file
+*.idea.user
+
+# Local app settings
+appsettings.Development.json

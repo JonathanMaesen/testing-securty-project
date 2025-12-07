@@ -1,4 +1,5 @@
 ﻿using security_testing_project;
+using System.Threading.Tasks;
 
 namespace SecurityProject.MSTests
 {
@@ -35,7 +36,7 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public void Go_ShouldChangeRoom_WhenExitExists()
+        public async Task Go_ShouldChangeRoom_WhenExitExists()
         {
             var world = new World();
             var start = new Room("Start", "Start room");
@@ -45,7 +46,7 @@ namespace SecurityProject.MSTests
             world.Connect("Start", Direction.Up, "Next");
             world.SetStart("Start");
 
-            string result = world.Go(Direction.Up);
+            string result = await world.Go(Direction.Up);
             
             Assert.IsTrue(result.Contains("Next"));
         }

@@ -1,4 +1,6 @@
-﻿namespace security_testing_project;
+﻿using System.Threading.Tasks; // Added for async Main
+
+namespace security_testing_project;
 
 internal static class Program
 {
@@ -6,8 +8,39 @@ internal static class Program
     /// game state, defines the player commands, and runs the core loop that reads
     /// player input and updates the game world. It also handles the win and game-over
     /// conditions, including restarting the game on death.
-    private static void Main()
+    private static async Task Main()
     {
+        while (!ApiService.IsLoggedIn)
+        {
+            Console.Clear();
+            Console.WriteLine("Welcome to the Secure Text Adventure!");
+            Console.WriteLine("Please log in to continue.");
+            Console.Write("Username: ");
+            var username = Console.ReadLine();
+            Console.Write("Password: ");
+            var password = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            {
+                Console.WriteLine("Username and password cannot be empty. Press any key to try again.");
+                Console.ReadKey();
+                continue;
+            }
+
+            var (success, message) = await ApiService.LoginAsync(username, password);
+
+            if (success)
+            {
+                Console.WriteLine($"Login successful! Welcome, {ApiService.Username} (Role: {ApiService.Role}). Press any key to start your adventure.");
+                Console.ReadKey();
+            }
+            else
+            {
+                Console.WriteLine($"Login failed: {message}. Press any key to try again.");
+                Console.ReadKey();
+            }
+        }
+
         var world = CreateTestWorld();
         var terminal = SetupCommands(world);
 
@@ -30,7 +63,7 @@ internal static class Program
             }
         
             Console.Clear();
-            terminal.TryCommand(command, arg);
+            await terminal.TryCommand(command, arg); // Await the async command
         
             if (world.IsWin)
             {
@@ -55,34 +88,34 @@ internal static class Program
     {
         var terminal = new CommandManager<string?>(() => Console.WriteLine(world.Look()));
 
-        terminal.AddCommand("look", _ => Console.WriteLine(world.Look()), "Show the inventory, current room, items in the room, and exits.");
-        terminal.AddCommand("inventory", _ => Console.WriteLine(world.GetInventoryDescription()), "Show only the inventory.");
-        terminal.AddCommand("go", arg =>
+        terminal.AddCommand("look", _ => { Console.WriteLine(world.Look()); return Task.FromResult(0); }, "Show the inventory, current room, items in the room, and exits.");
+        terminal.AddCommand("inventory", _ => { Console.WriteLine(world.GetInventoryDescription()); return Task.FromResult(0); }, "Show only the inventory.");
+        terminal.AddCommand("go", async arg => // Made async
         {
             if (string.IsNullOrEmpty(arg))
             {
                 Console.WriteLine("Go where?");
-                return;
+                return; // Returns Task.CompletedTask implicitly
             }
             var dir = ParseDirection(arg);
             if (dir == null)
             {
                 Console.WriteLine($"Unknown direction: {arg}");
-                return;
+                return; // Returns Task.CompletedTask implicitly
             }
-            Console.WriteLine(world.Go(dir));
+            Console.WriteLine(await world.Go(dir)); // Await world.Go
         }, "go <direction> - Move in the specified direction.");
-        terminal.AddCommand("take", arg =>
-        {
+        terminal.AddCommand("take", arg => {
             if (string.IsNullOrEmpty(arg))
             {
                 Console.WriteLine("Take what?");
-                return;
+                return Task.FromResult(0);
             }
             Console.WriteLine(world.Take(arg));
+            return Task.FromResult(0);
         }, "take <item> — Pick up an item.");
-        terminal.AddCommand("fight", _ => Console.WriteLine(world.Fight()), "Fight the monster if you are in the correct room.");
-        terminal.AddCommand("quit", _ => {}, "Stop the game.");
+        terminal.AddCommand("fight", _ => { Console.WriteLine(world.Fight()); return Task.FromResult(0); }, "Fight the monster if you are in the correct room.");
+        terminal.AddCommand("quit", _ => Task.FromResult(0), "Stop the game.");
         
         return terminal;
     }

@@ -19,9 +19,20 @@ namespace API.Services
             if (_users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
                 return false;
 
-            // Valideer rol
-            if (role != "Player" && role != "Admin")
+            // Valideer rol (case-insensitive)
+            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(role, "Player", StringComparison.OrdinalIgnoreCase))
+            {
                 role = "Player";
+            }
+            else if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                role = "Admin"; // Zorg ervoor dat de rol consistent "Admin" is
+            }
+            else
+            {
+                role = "Player"; // Zorg ervoor dat de rol consistent "Player" is
+            }
 
             // Hash het wachtwoord met SHA-256
             var passwordHash = HashPassword(password);

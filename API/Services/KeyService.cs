@@ -20,7 +20,7 @@ namespace API.Services
 
         public KeyShareResponse? GetKeyShare(string roomId, string userRole)
         {
-            // Validatie
+            // Validation
             if (string.IsNullOrWhiteSpace(roomId))
                 return null;
 

@@ -1,3 +1,6 @@
+using System;
+using System.Threading.Tasks; // Added for async operations
+
 namespace security_testing_project;
 
 public interface IGameworld
@@ -5,7 +8,7 @@ public interface IGameworld
     string Look();
     string GetInventoryDescription();
     string Take(string itemName);
-    string Go(Direction dir);
+    Task<string> Go(Direction dir); // Changed to async Task<string>
     string Fight();
     bool IsGameOver { get; }
     bool IsWin { get; }
@@ -53,7 +56,7 @@ public sealed class World : IGameworld
         return $"You took the {item.Name}.\n{Look()}";
     }
 
-    public string Go(Direction dir)
+    public async Task<string> Go(Direction dir) // Changed to async Task<string>
     {
         if (Current.Monster is { IsAlive: true })
         {
@@ -71,27 +74,38 @@ public sealed class World : IGameworld
 
             if (nextRoom.IsEncrypted && nextRoom.DecryptedContent == string.Empty)
             {
-                string simulatedUserRole = "Player"; 
-                
-                string roomId = nextRoom.EncryptedContentFile?.Replace(".enc", "") ?? "unknown";
-                string keyshare = GetSimulatedKeyShare(roomId, simulatedUserRole); 
+                // 1. Prompt the user for the passphrase
+                Console.WriteLine("This room is sealed by a magical barrier. Please enter the passphrase:");
+                var passphrase = Console.ReadLine() ?? string.Empty;
 
-                if (string.IsNullOrEmpty(keyshare))
+                // 2. Fetch the keyshare from the API
+                var roomId = nextRoom.EncryptedContentFile?.Replace(".enc", "") ?? "unknown";
+                var (success, responseJson, message) = await ApiService.GetAuthenticatedAsync($"api/keys/keyshare/{roomId}");
+
+                if (!success)
                 {
-                    return "De kamer is versleuteld en u bent niet geautoriseerd om de keyshare op te halen (Rol te laag).";
+                    return $"You are not authorized to enter this room. The API responded: {message}";
+                }
+                
+                var keyShareResponse = System.Text.Json.JsonSerializer.Deserialize<KeyShareResponse>(responseJson ?? "{}");
+                var keyShare = keyShareResponse?.KeyShare;
+
+                if (string.IsNullOrEmpty(keyShare))
+                {
+                    return "Could not retrieve the necessary keyshare from the API.";
                 }
 
-                string decryptionKey = CryptoHelper.GenerateDecryptionKey(keyshare);
-
-                if (CryptoHelper.TryDecryptRoomContent(nextRoom.EncryptedContentFile!, decryptionKey, out var decryptedContent))
+                // 3. Attempt decryption with keyshare and passphrase
+                var encryptedFilePath = Path.Combine(AppContext.BaseDirectory, nextRoom.EncryptedContentFile!);
+                if (CryptoHelper.TryDecryptRoomContent(encryptedFilePath, keyShare, passphrase, out var decryptedContent))
                 {
                     nextRoom.DecryptedContent = decryptedContent;
                     Current = nextRoom;
-                    return $"Succes! De kamerinhoud is ontsleuteld met de Keyshare.\n{Look()}";
+                    return $"The passphrase is correct! The barrier dissolves.\n{Look()}";
                 }
                 else
                 {
-                    return "Decryptie mislukt. De sleutel is onjuist of het bestand is beschadigd.";
+                    return $"The passphrase was incorrect. The magical barrier remains. Error: {decryptedContent}";
                 }
             }
             else if (nextRoom.IsEncrypted && nextRoom.DecryptedContent != string.Empty)
@@ -151,24 +165,12 @@ public sealed class World : IGameworld
         return $"You fight the {Current.Monster.Name} and defeat it!\n{Look()}";
     }
 
-    private string GetSimulatedKeyShare(string roomId, string userRole)
-    {
-        const string roomSecretShare = "SecretKeyShare123ForRoom1";
-        const string roomAdminShare = "AdminOnlyKeyShare789ForRoom3";
+    // Removed GetSimulatedKeyShare method
+}
 
-        if (roomId.Equals("room_secret", StringComparison.OrdinalIgnoreCase))
-        {
-            return roomSecretShare;
-        }
-
-        if (roomId.Equals("room_admin", StringComparison.OrdinalIgnoreCase))
-        {
-            if (userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase))
-            {
-                return roomAdminShare;
-            }
-        }
-        
-        return string.Empty;
-    }
+// Added for keyshare API response deserialization
+public class KeyShareResponse
+{
+    public string? RoomId { get; set; }
+    public string? KeyShare { get; set; }
 }

@@ -1,13 +1,17 @@
-﻿namespace security_testing_project
+﻿using System.Threading.Tasks; // Added for async support
+
+namespace security_testing_project
 { 
     public class CommandManager<T>
     {
-        private readonly Dictionary<string, (Action<T> Action, string Description)> _commands = new();
-        private readonly Action? _onUnknownCommand;
+        // Changed Action to Func<T, Task> to support async commands
+        private readonly Dictionary<string, (Func<T, Task> Action, string Description)> _commands = new();
+        private readonly Action? _onUnknownCommand; // Keeping this as Action for simplicity, it's not directly awaiting anything.
 
         public CommandManager(Action? onUnknownCommand = null)
         {
             _onUnknownCommand = onUnknownCommand;
+            // Updated AddCommand for help to use Task.FromResult(0) for a synchronous Task
             AddCommand("help", _ =>
             {
                 Console.WriteLine("\nAvailable commands:");
@@ -16,10 +20,12 @@
                     var commandName = name.PadRight(10);
                     Console.WriteLine($"- {commandName}{description}");
                 }
+                return Task.FromResult(0);
             }, "Show a list of commands.");
         }
     
-        public void TryCommand(string command, T? value = default)
+        // Changed to async Task to await command actions
+        public async Task TryCommand(string command, T? value = default)
         {
             if (!_commands.TryGetValue(command, out var cmd))
             {
@@ -29,7 +35,7 @@
             }
             try
             {
-                cmd.Action(value!);
+                await cmd.Action(value!); // Await the async command action
             }
             catch (Exception ex)
             {
@@ -37,7 +43,8 @@
             }
         }
 
-        public void AddCommand(string name, Action<T> action, string description)
+        // Changed Action to Func<T, Task>
+        public void AddCommand(string name, Func<T, Task> action, string description)
         {
             if (_commands.ContainsKey(name))
                 throw new InvalidOperationException($"Command '{name}' already exists.");
@@ -46,3 +53,4 @@
         }
     }
 }
+

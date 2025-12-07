@@ -1,8 +1,7 @@
 ﻿using security_testing_project;
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SecurityProject.MSTests
@@ -25,13 +24,13 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public void FullPlaythrough_PlayerWins_WithKey()
+        public async Task FullPlaythrough_PlayerWins_WithKey()
         {
-            ExecuteCommand("look");
-            ExecuteCommand("go right");
-            ExecuteCommand("take key");
-            ExecuteCommand("go left");
-            ExecuteCommand("go up");
+            await ExecuteCommand("look");
+            await ExecuteCommand("go right");
+            await ExecuteCommand("take key");
+            await ExecuteCommand("go left");
+            await ExecuteCommand("go up");
 
             var output = _consoleOutput.ToString();
 
@@ -40,10 +39,10 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public void EnterDeadlyPit_TriggersGameOver()
+        public async Task EnterDeadlyPit_TriggersGameOver()
         {
-            ExecuteCommand("look");
-            ExecuteCommand("go left");
+            await ExecuteCommand("look");
+            await ExecuteCommand("go left");
 
             var output = _consoleOutput.ToString();
 
@@ -52,26 +51,26 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public void InvalidDirection_ShowsUnknownMessage()
+        public async Task InvalidDirection_ShowsUnknownMessage()
         {
-            ExecuteCommand("go diagonal");
+            await ExecuteCommand("go diagonal");
 
             var output = _consoleOutput.ToString();
             StringAssert.Contains(output, "Unknown direction: diagonal");
         }
 
         [TestMethod]
-        public void GoDown_GetSword_ThenFightGoblin_Succeeds()
+        public async Task GoDown_GetSword_ThenFightGoblin_Succeeds()
         {
             // Player path:
             // 1. go down to Sword Room
             // 2. take sword
             // 3. go down again to Monster Lair
             // 4. fight goblin
-            ExecuteCommand("go down");
-            ExecuteCommand("take sword");
-            ExecuteCommand("go down");
-            ExecuteCommand("fight");
+            await ExecuteCommand("go down");
+            await ExecuteCommand("take sword");
+            await ExecuteCommand("go down");
+            await ExecuteCommand("fight");
 
             var output = _consoleOutput.ToString();
 
@@ -82,21 +81,21 @@ namespace SecurityProject.MSTests
 
         // ---- Helpers ----
 
-        private void ExecuteCommand(string command)
+        private async Task ExecuteCommand(string command)
         {
             var parts = command.Split(' ', 2);
             var cmd = parts[0].ToLower();
             var arg = parts.Length > 1 ? parts[1] : null;
-            _terminal.TryCommand(cmd, arg);
+            await _terminal.TryCommand(cmd, arg);
         }
 
         private static CommandManager<string?> SetupCommands(World world)
         {
             var terminal = new CommandManager<string?>(() => Console.WriteLine(world.Look()));
 
-            terminal.AddCommand("look", _ => Console.WriteLine(world.Look()), "Show world status.");
-            terminal.AddCommand("inventory", _ => Console.WriteLine(world.GetInventoryDescription()), "Show inventory.");
-            terminal.AddCommand("go", arg =>
+            terminal.AddCommand("look", _ => { Console.WriteLine(world.Look()); return Task.FromResult(0); }, "Show world status.");
+            terminal.AddCommand("inventory", _ => { Console.WriteLine(world.GetInventoryDescription()); return Task.FromResult(0); }, "Show inventory.");
+            terminal.AddCommand("go", async arg =>
             {
                 if (string.IsNullOrEmpty(arg))
                 {
@@ -109,19 +108,20 @@ namespace SecurityProject.MSTests
                     Console.WriteLine($"Unknown direction: {arg}");
                     return;
                 }
-                Console.WriteLine(world.Go(dir));
+                Console.WriteLine(await world.Go(dir));
             }, "go <direction> - Move.");
             terminal.AddCommand("take", arg =>
             {
                 if (string.IsNullOrEmpty(arg))
                 {
                     Console.WriteLine("Take what?");
-                    return;
+                    return Task.FromResult(0);
                 }
                 Console.WriteLine(world.Take(arg));
+                return Task.FromResult(0);
             }, "take <item> — Pick up an item.");
-            terminal.AddCommand("fight", _ => Console.WriteLine(world.Fight()), "Fight the monster.");
-            terminal.AddCommand("quit", _ => { }, "Exit game.");
+            terminal.AddCommand("fight", _ => { Console.WriteLine(world.Fight()); return Task.FromResult(0); }, "Fight the monster.");
+            terminal.AddCommand("quit", _ => Task.FromResult(0), "Exit game.");
 
             return terminal;
         }

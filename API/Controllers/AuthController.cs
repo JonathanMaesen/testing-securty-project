@@ -120,8 +120,11 @@ namespace API.Controllers
 
         private string GenerateJwtToken(User user)
         {
-            var jwtKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
-                ?? "DitIsEenGeheimeSleutelVoorJWT2024MinimaalDertigKarakters";
+            var jwtKey = _configuration["JWT_SECRET_KEY"];
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new InvalidOperationException("JWT_SECRET_KEY is not set in the configuration. Cannot generate JWT.");
+            }
             var jwtIssuer = "TextAdventureAPI";
             var jwtAudience = "TextAdventureClient";
 
