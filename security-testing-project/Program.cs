@@ -102,6 +102,20 @@ internal static class Program
     
         world.AddRoom(new Room("Start", "You are in the center of a cave system. There are passages leading up, down, left, and right."));
     
+        var secretRoom = new Room("Secret Vault", "U staat voor een massieve stalen deur. Terminal: 'Gecodeerde inhoud vereist KeyShare en Passphrase voor decryptie van room_secret.enc'.")
+        {
+            IsEncrypted = true,
+            EncryptedContentFile = "room_secret.enc",
+        };
+        world.AddRoom(secretRoom);
+        
+        var adminRoom = new Room("Admin Sanctum", "U staat voor een ondoordringbare zwarte monoliet. Toegang geweigerd. Terminal: 'Gecodeerde inhoud vereist Admin-rol en KeyShare voor room_admin.enc'.")
+        {
+            IsEncrypted = true,
+            EncryptedContentFile = "room_admin.enc",
+        };
+        world.AddRoom(adminRoom);
+        
         var deadlyPit = new Room("Deadly Pit", "A deep, dark pit. You didn't survive the fall.")
         {
             IsDeadly = true
@@ -149,6 +163,12 @@ internal static class Program
     
         world.Connect("Sword Room", Direction.Down, "Monster Lair");
         world.Connect("Monster Lair", Direction.Up, "Sword Room");
+        
+        world.Connect("Sword Room", Direction.Left, "Secret Vault");
+        world.Connect("Secret Vault", Direction.Right, "Sword Room");
+    
+        world.Connect("Treasure Room", Direction.Left, "Admin Sanctum");
+        world.Connect("Admin Sanctum", Direction.Right, "Treasure Room");
 
         world.SetStart("Start");
         return world;

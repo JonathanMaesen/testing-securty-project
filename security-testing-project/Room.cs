@@ -19,6 +19,11 @@ public class Room(string name, string description)
     public bool IsDeadly { get; init; }
     public bool RequiresKey { get; init; }
     public bool IsUnlocked { get; set; }
+    
+    public bool IsEncrypted { get; init; } 
+    public string? EncryptedContentFile { get; init; }
+    public string DecryptedContent { get; set; } = string.Empty;
+    
     public List<Item> Items { get; } = new();
     public Monster? Monster { get; set; }
     public Dictionary<Direction, Room> Exits { get; } = new();
@@ -31,6 +36,11 @@ public class Room(string name, string description)
         };
 
         bool monsterDefeated = Monster is { IsAlive: false };
+
+        if (IsEncrypted && !string.IsNullOrEmpty(DecryptedContent))
+        {
+            lines.Add(DecryptedContent);
+        }
 
         if (monsterDefeated && !string.IsNullOrEmpty(DescriptionWhenMonsterDefeated))
         {
