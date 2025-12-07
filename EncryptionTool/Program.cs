@@ -66,6 +66,8 @@ class Program
     }
     static X509Certificate2 CreateTestCertificate(string subjectName, string password, string pfxFileName)
     {
+        const string OutputPath = "../../../"; 
+
         using var rsa = RSA.Create(2048);
         var certRequest = new CertificateRequest(subjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
@@ -76,11 +78,9 @@ class Program
 
         var certificate = certRequest.CreateSelfSigned(DateTimeOffset.Now.AddDays(-1), DateTimeOffset.Now.AddDays(365));
 
-        // Exporteer met privésleutel en wachtwoord
         byte[] pfxBytes = certificate.Export(X509ContentType.Pfx, password);
-        File.WriteAllBytes(pfxFileName, pfxBytes);
+        File.WriteAllBytes(OutputPath + pfxFileName, pfxBytes);
 
-        // Keer terug naar het programma
-        return new X509Certificate2(certificate.Export(X509ContentType.Pfx, password));
+        return new X509Certificate2(pfxBytes, password);
     }
 }
