@@ -1,15 +1,25 @@
 ﻿using security_testing_project;
+using System.Net.Http;
+using Moq;
 
 namespace SecurityProject.MSTests
 {
     [TestClass]
     public class WorldFightTests
     {
+        private Mock<ApiService> _mockApiService = null!;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _mockApiService = new Mock<ApiService>(new HttpClient());
+        }
+
         [TestMethod]
         public void Fight_NoMonster_ReturnsExpectedMessage()
         {
             var room = new Room("MonsterRoom", "A scary place");
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             world.AddRoom(room);
             world.SetStart("MonsterRoom");
 
@@ -23,7 +33,7 @@ namespace SecurityProject.MSTests
         {
             var monster = new Monster("Goblin", true);
             var room = new Room("MonsterRoom", "A scary place") { Monster = monster };
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             world.AddRoom(room);
             world.SetStart("MonsterRoom");
 
@@ -37,7 +47,7 @@ namespace SecurityProject.MSTests
         {
             var monster = new Monster("Goblin", true);
             var room = new Room("MonsterRoom", "A scary place") { Monster = monster };
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             world.AddRoom(room);
             world.SetStart("MonsterRoom");
 

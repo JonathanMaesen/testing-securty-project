@@ -1,15 +1,25 @@
 ﻿using security_testing_project;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Moq;
 
 namespace SecurityProject.MSTests
 {
     [TestClass]
     public class PlayerInteractionTests
     {
+        private Mock<ApiService> _mockApiService = null!;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _mockApiService = new Mock<ApiService>(new HttpClient());
+        }
+
         [TestMethod]
         public void Look_ShouldReturnRoomDescription()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var room = new Room("Start", "You are in the start room.");
             world.AddRoom(room);
             world.SetStart("Start");
@@ -22,7 +32,7 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void Take_ShouldAddItemToInventory()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var room = new Room("Start", "You are in the start room.");
             var item = new Item("Sword", "A sharp blade.", ItemType.Weapon);
             room.Items.Add(item);
@@ -36,9 +46,9 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public void Go_ShouldChangeRoom_WhenExitExists()
+        public async Task Go_ShouldChangeRoom_WhenExitExists()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var start = new Room("Start", "Start room");
             var next = new Room("Next", "Next room");
             world.AddRoom(start);
@@ -46,7 +56,7 @@ namespace SecurityProject.MSTests
             world.Connect("Start", Direction.Up, "Next");
             world.SetStart("Start");
 
-            string result = world.Go(Direction.Up);
+            string result = await world.Go(Direction.Up);
             
             Assert.IsTrue(result.Contains("Next"));
         }
@@ -64,7 +74,7 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void Fight_ShouldKillMonster_WhenWeaponInInventory()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var room = new Room("MonsterRoom", "A scary place");
             
             var sword = new Item("Sword", "A sharp sword", ItemType.Weapon);
@@ -83,9 +93,9 @@ namespace SecurityProject.MSTests
             StringAssert.Contains(result.ToLower(), "defeat");
         }
         [TestMethod]
-        public void GoBack_ShouldReturnToPreviousRoom()
+        public async Task GoBack_ShouldReturnToPreviousRoom()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var start = new Room("Start", "Start room");
             var next = new Room("Next", "Next room");
             world.AddRoom(start);
@@ -93,7 +103,7 @@ namespace SecurityProject.MSTests
             world.Connect("Start", Direction.Up, "Next");
             world.SetStart("Start");
 
-            world.Go(Direction.Up);
+            await world.Go(Direction.Up);
             var result = world.GoBack();
 
             StringAssert.Contains(result, "Start");
@@ -102,7 +112,7 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void GoBack_ShouldFail_WhenNoPreviousRoom()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var start = new Room("Start", "Start room");
             world.AddRoom(start);
             world.SetStart("Start");
@@ -112,9 +122,9 @@ namespace SecurityProject.MSTests
             StringAssert.Contains(result, "You can't go back.");
         }
         [TestMethod]
-        public void GoBack_ShouldFail_WhenCalledTwice()
+        public async Task GoBack_ShouldFail_WhenCalledTwice()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var start = new Room("Start", "Start room");
             var next = new Room("Next", "Next room");
             world.AddRoom(start);
@@ -122,7 +132,7 @@ namespace SecurityProject.MSTests
             world.Connect("Start", Direction.Up, "Next");
             world.SetStart("Start");
 
-            world.Go(Direction.Up);
+            await world.Go(Direction.Up);
             world.GoBack();
             var result = world.GoBack();
 
@@ -130,9 +140,9 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public void GoBackCommand_IsCaseInsensitive()
+        public async Task GoBackCommand_IsCaseInsensitive()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var start = new Room("Start", "Start room");
             var next = new Room("Next", "Next room");
             world.AddRoom(start);
@@ -140,7 +150,7 @@ namespace SecurityProject.MSTests
             world.Connect("Start", Direction.Up, "Next");
             world.SetStart("Start");
 
-            world.Go(Direction.Up);
+            await world.Go(Direction.Up);
 
             var terminal = new CommandManager<string?>(() => { });
             terminal.AddCommand("go", arg => {
@@ -154,7 +164,7 @@ namespace SecurityProject.MSTests
             using (var sw = new System.IO.StringWriter())
             {
                 Console.SetOut(sw);
-                terminal.TryCommand("go", "BACK");
+                await terminal.TryCommand("go", "BACK");
                 var result = sw.ToString();
                 StringAssert.Contains(result, "Start");
             }

@@ -146,5 +146,26 @@ namespace security_testing_project
                 return (false, null, $"An unexpected error occurred: {ex.Message}");
             }
         }
+
+        public async Task<string?> GetKeyShareAsync(string roomId)
+        {
+            if (!IsLoggedIn) return null;
+
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/keys/keyshare/{roomId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    dynamic? result = JsonConvert.DeserializeObject(content);
+                    return result?.keyshare;
+                }
+                return null; 
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

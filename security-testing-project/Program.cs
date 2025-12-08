@@ -36,7 +36,7 @@ internal static class Program
             }
         }
 
-        var world = CreateTestWorld();
+        var world = CreateTestWorld(apiService);
         var terminal = SetupCommands(world);
 
         Console.WriteLine(world.Look());
@@ -71,7 +71,7 @@ internal static class Program
                 Console.WriteLine("\nGame Over. Restarting the game...");
                 Thread.Sleep(2000);
 
-                world = CreateTestWorld();
+                world = CreateTestWorld(apiService);
                 terminal = SetupCommands(world);
                 Console.Clear();
                 Console.WriteLine("A new adventure begins...");
@@ -150,26 +150,26 @@ internal static class Program
 
         terminal.AddCommand("look", _ => { Console.WriteLine(world.Look()); return Task.FromResult(0); }, "Show the inventory, current room, items in the room, and exits.");
         terminal.AddCommand("inventory", _ => { Console.WriteLine(world.GetInventoryDescription()); return Task.FromResult(0); }, "Show only the inventory.");
-        terminal.AddCommand("go", arg =>
+        terminal.AddCommand("go", async arg =>
         {
             if (string.IsNullOrEmpty(arg))
             {
                 Console.WriteLine("Go where?");
-                return Task.FromResult(0);
+                return;
             }
             if (arg.Equals("back", StringComparison.OrdinalIgnoreCase))
             {
                 Console.WriteLine(world.GoBack());
-                return Task.FromResult(0);
+                return;
             }
             var dir = ParseDirection(arg);
             if (dir == null)
             {
                 Console.WriteLine($"Unknown direction: {arg}");
-                return Task.FromResult(0);
+                return;
             }
-            Console.WriteLine(world.Go(dir));
-            return Task.FromResult(0);
+            string result = await world.Go(dir);
+            Console.WriteLine(result);
         }, "go <direction> - Move in the specified direction.");
         terminal.AddCommand("back", _ => { Console.WriteLine(world.GoBack()); return Task.FromResult(0); }, "Go back to the previous room.");
         terminal.AddCommand("take", arg =>
@@ -197,9 +197,9 @@ internal static class Program
         return null;
     }
 
-    private static World CreateTestWorld()
+    private static World CreateTestWorld(ApiService api)
     {
-        var world = new World();
+        var world = new World(api);
 
         world.AddRoom(new Room("Start", "You are in the center of a cave system. There are passages leading up, down, left, and right."));
 
