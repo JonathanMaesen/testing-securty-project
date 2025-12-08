@@ -29,8 +29,6 @@ Once authenticated, the adventure begins.
 
 ### 1.3 Game Mechanics
 
-The game is played by typing commands into the console. The core game loop reads player input, executes the corresponding action, and updates the game state in real-time.
-
 #### Player Commands
 
 | Command             | Description                                                   |
@@ -43,41 +41,33 @@ The game is played by typing commands into the console. The core game loop reads
 | `help`              | Lists all available commands.                                 |
 | `quit`              | Exits the game.                                               |
 
-#### Winning and Losing
+#### Encrypted Rooms
 
-- **Win Condition**: The game is won by entering the **"Treasure Room,"** which requires a key for access.
-- **Game Over Conditions**:
-  1.  Entering a room where `IsDeadly` is `true`.
-  2.  Engaging in combat with a monster without a `Weapon`.
-  3.  Attempting to move out of a room while a monster is present.
+Some rooms in the game are encrypted. To enter them, you need to complete a security challenge:
+1.  When you try to enter an encrypted room, the game will automatically contact the API to fetch a **Keyshare**.
+2.  You will then be prompted to enter a **Passphrase**.
+3.  The game combines the Keyshare and your Passphrase to derive a decryption key.
+4.  Finally, you must provide the path to your personal certificate file (`.pfx`), which is protected by this derived key.
+
+If the derived key correctly unlocks your certificate, the room will be decrypted, and you can enter.
 
 ---
 
 ## 2. Web API for User Authentication
 
-The `API` project is a secure ASP.NET Core Web API that provides user registration and login functionality using JWT (JSON Web Tokens).
+The `API` project is a secure ASP.NET Core Web API that provides user registration, login, and keyshare distribution functionality using JWT.
 
 ### 2.1 Setup and Configuration
-
-Follow these steps to get the API running on your local machine.
 
 #### Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later.
-- A code editor like Visual Studio, VS Code, or JetBrains Rider.
 
 #### Step 1: Configure the JWT Secret
 
-The application requires a secret key to sign and validate JWTs. This key must be configured before running the API.
-
-1.  Navigate to the `API` directory:
-    ```bash
-    cd API
-    ```
-2.  Create a new file named `appsettings.Development.json`. This file is listed in `.gitignore`, so your secret key will not be committed to the repository.
-
-3.  Add the following JSON to the file, replacing `"YOUR_SUPER_SECRET_KEY_GOES_HERE"` with a strong, unique secret:
-
+1.  Navigate to the `API` directory.
+2.  Create a file named `appsettings.Development.json`.
+3.  Add the following JSON, replacing the placeholder with a strong secret:
     ```json
     {
       "JWT_SECRET_KEY": "YOUR_SUPER_SECRET_KEY_GOES_HERE"
@@ -87,73 +77,57 @@ The application requires a secret key to sign and validate JWTs. This key must b
 ### 2.2 How to Run the API
 
 1.  Open your terminal and navigate to the root of the project.
-2.  Run the following command:
-
+2.  Run the command:
     ```bash
     dotnet run --project API/API.csproj
     ```
-3.  The API will start, and the console will display the URL where it is running (e.g., `https://localhost:7058`).
-
-### 2.3 API Tutorial: Authentication and Usage
-
-The API includes interactive documentation (Swagger) to help you test the endpoints. Once the API is running, open your browser and navigate to the Swagger UI at the URL displayed in the console (e.g., `https://localhost:7058/swagger`).
-
-#### Step 1: Register a New User
-
-The API uses an in-memory user store, so you will need to register a new user each time you restart the application.
-
-1.  In the Swagger UI, find the `POST /api/Auth/register` endpoint and expand it.
-2.  Click **"Try it out"**.
-3.  In the request body, enter a `username`, `password`, and `role`. The password must be at least 6 characters long.
-
-    ```json
-    {
-      "username": "testuser",
-      "password": "password123",
-      "role": "Player"
-    }
-    ```
-4.  Click **"Execute"**. You should receive a `200 OK` response confirming the user was registered successfully.
-
-#### Step 2: Log In and Get a JWT
-
-Next, log in with the newly created user to obtain a JWT.
-
-1.  Find the `POST /api/Auth/login` endpoint and expand it.
-2.  Click **"Try it out"**.
-3.  Enter the `username` and `password` you just registered.
-4.  Click **"Execute"**. The response body will contain a JWT.
-
-#### Step 3: Access a Protected Endpoint
-
-Now you can use the JWT to access endpoints that require authentication.
-
-1.  **Copy the entire `token`** from the login response.
-2.  At the top right of the Swagger page, click the **"Authorize"** button.
-3.  In the dialog that appears, type **`Bearer`** followed by a space, and then paste your token.
-4.  Click **"Authorize"** and then **"Close"**.
-5.  Now, find the `GET /api/Auth/me` endpoint, expand it, and click **"Execute"**. You should receive a `200 OK` response with the current user's details.
 
 ---
 
-## 3. Testing
+## 3. Encryption Tool (For Developers)
 
-The project includes a dedicated test project, `SecurityProject.MSTests`, for ensuring code quality and correctness through unit, integration, and behavior-driven tests.
+The `EncryptionTool` is a command-line utility for developers to create the encrypted room files (`.enc`) and their corresponding certificates (`.pfx`).
 
----
+### 3.1 The Decryption Key Explained
 
-## 4. Encryption Tool
+The password for the certificate (`.pfx` file) is not a simple string. It is **derived** from two pieces of information:
+- A **Keyshare** (provided by the API, e.g., `"Share_For_Players_123"`)
+- A **Passphrase** (a secret known by the player, e.g., `"apple"`)
 
-The `EncryptionTool` project is a utility for encrypting and decrypting room files using a hybrid encryption scheme with X.509 certificates.
+The final password is the `SHA256` hash of these two values combined with a colon: `SHA256(Keyshare + ":" + Passphrase)`.
 
-### How to Use
+### 3.2 How to Create Encrypted Rooms
 
-#### Generate a Certificate
+Here is the developer workflow for creating a new encrypted room.
+
+#### Step 1: Define Your Secrets
+
+Decide on the `roomId`, `keyshare`, and `passphrase` for your new room.
+- **Room ID**: `room_secret`
+- **Keyshare**: `Share_For_Players_123`
+- **Passphrase**: `apple`
+
+#### Step 2: Calculate the Certificate Password
+
+You need to calculate the SHA256 hash of `"Share_For_Players_123:apple"`. You can use any online or local tool to do this. The result will be a long hexadecimal string (e.g., `3A7BD3E2...`).
+
+#### Step 3: Create the Certificate and Encrypted File
+
+Use the `encrypt` command in the `EncryptionTool`. It will automatically generate the certificate if it doesn't exist.
+
+- `<inputFile>`: Your plaintext room content (e.g., `room_secret.txt`).
+- `<outputFile>`: The destination for the encrypted content (e.g., `room_secret.enc`).
+- `<cert-path>`: The path for the certificate to be created (e.g., `certs/room_secret.cer`).
+- `[cert-password]`: The **derived SHA256 hash** you calculated in Step 2.
+
+**Example Command:**
 ```bash
-dotnet run --project EncryptionTool/EncryptionTool.csproj -- generate-cert <output-path> <password>
+dotnet run --project EncryptionTool/EncryptionTool.csproj -- encrypt room_secret.txt room_secret.enc certs/room_secret.cer 3A7BD3E2...
 ```
 
-#### Encrypt a File
-```bash
-dotnet run --project EncryptionTool/EncryptionTool.csproj -- encrypt <inputFile> <outputFile> <cert-path>
-```
+This command will:
+1.  See that `certs/room_secret.cer` does not exist.
+2.  Generate `certs/room_secret.cer` (public key) and `certs/room_secret.pfx` (private key), using the SHA256 hash as the password for the `.pfx` file.
+3.  Encrypt `room_secret.txt` into `room_secret.enc` using the new certificate.
+
+You can then distribute the `.pfx` file to the player and place the `.enc` file in the game's output directory.

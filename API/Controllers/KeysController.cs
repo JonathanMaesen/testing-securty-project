@@ -25,7 +25,7 @@ namespace API.Controllers
                 return NotFound(new { message = "Keyshare niet gevonden voor deze kamer." });
             }
 
-            // Autorisatiecheck: Alleen Admins mogen de keyshare van de Admin Room opvragen
+            // Autorisatiecheck: Alleen Admins mogen de -keyshare van de Admin Room opvragen
             if (roomId == "room_admin")
             {
                 var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
