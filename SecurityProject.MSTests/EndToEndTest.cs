@@ -24,13 +24,13 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public async Task FullPlaythrough_PlayerWins_WithKey()
+        public void FullPlaythrough_PlayerWins_WithKey()
         {
-            await ExecuteCommand("look");
-            await ExecuteCommand("go right");
-            await ExecuteCommand("take key");
-            await ExecuteCommand("go left");
-            await ExecuteCommand("go up");
+            ExecuteCommand("look");
+            ExecuteCommand("go right");
+            ExecuteCommand("take key");
+            ExecuteCommand("go left");
+            ExecuteCommand("go up");
 
             var output = _consoleOutput.ToString();
 
@@ -39,10 +39,10 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public async Task EnterDeadlyPit_TriggersGameOver()
+        public void EnterDeadlyPit_TriggersGameOver()
         {
-            await ExecuteCommand("look");
-            await ExecuteCommand("go left");
+            ExecuteCommand("look");
+            ExecuteCommand("go left");
 
             var output = _consoleOutput.ToString();
 
@@ -51,26 +51,26 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public async Task InvalidDirection_ShowsUnknownMessage()
+        public void InvalidDirection_ShowsUnknownMessage()
         {
-            await ExecuteCommand("go diagonal");
+            ExecuteCommand("go diagonal");
 
             var output = _consoleOutput.ToString();
             StringAssert.Contains(output, "Unknown direction: diagonal");
         }
 
         [TestMethod]
-        public async Task GoDown_GetSword_ThenFightGoblin_Succeeds()
+        public void GoDown_GetSword_ThenFightGoblin_Succeeds()
         {
             // Player path:
             // 1. go down to Sword Room
             // 2. take sword
             // 3. go down again to Monster Lair
             // 4. fight goblin
-            await ExecuteCommand("go down");
-            await ExecuteCommand("take sword");
-            await ExecuteCommand("go down");
-            await ExecuteCommand("fight");
+            ExecuteCommand("go down");
+            ExecuteCommand("take sword");
+            ExecuteCommand("go down");
+            ExecuteCommand("fight");
 
             var output = _consoleOutput.ToString();
 
@@ -81,12 +81,12 @@ namespace SecurityProject.MSTests
 
         // ---- Helpers ----
 
-        private async Task ExecuteCommand(string command)
+        private void ExecuteCommand(string command)
         {
             var parts = command.Split(' ', 2);
             var cmd = parts[0].ToLower();
             var arg = parts.Length > 1 ? parts[1] : null;
-            await _terminal.TryCommand(cmd, arg);
+            _terminal.TryCommand(cmd, arg);
         }
 
         private static CommandManager<string?> SetupCommands(World world)
@@ -95,20 +95,21 @@ namespace SecurityProject.MSTests
 
             terminal.AddCommand("look", _ => { Console.WriteLine(world.Look()); return Task.FromResult(0); }, "Show world status.");
             terminal.AddCommand("inventory", _ => { Console.WriteLine(world.GetInventoryDescription()); return Task.FromResult(0); }, "Show inventory.");
-            terminal.AddCommand("go", async arg =>
+            terminal.AddCommand("go", arg =>
             {
                 if (string.IsNullOrEmpty(arg))
                 {
                     Console.WriteLine("Go where?");
-                    return;
+                    return Task.FromResult(0);
                 }
                 var dir = ParseDirection(arg);
                 if (dir == null)
                 {
                     Console.WriteLine($"Unknown direction: {arg}");
-                    return;
+                    return Task.FromResult(0);
                 }
-                Console.WriteLine(await world.Go(dir));
+                Console.WriteLine(world.Go(dir));
+                return Task.FromResult(0);
             }, "go <direction> - Move.");
             terminal.AddCommand("take", arg =>
             {

@@ -36,7 +36,7 @@ namespace SecurityProject.MSTests
         }
 
         [TestMethod]
-        public async Task Go_ShouldChangeRoom_WhenExitExists()
+        public void Go_ShouldChangeRoom_WhenExitExists()
         {
             var world = new World();
             var start = new Room("Start", "Start room");
@@ -46,7 +46,7 @@ namespace SecurityProject.MSTests
             world.Connect("Start", Direction.Up, "Next");
             world.SetStart("Start");
 
-            string result = await world.Go(Direction.Up);
+            string result = world.Go(Direction.Up);
             
             Assert.IsTrue(result.Contains("Next"));
         }
@@ -81,6 +81,83 @@ namespace SecurityProject.MSTests
 
             Assert.IsFalse(monster.IsAlive, "Monster moet dood zijn na Fight()");
             StringAssert.Contains(result.ToLower(), "defeat");
+        }
+        [TestMethod]
+        public void GoBack_ShouldReturnToPreviousRoom()
+        {
+            var world = new World();
+            var start = new Room("Start", "Start room");
+            var next = new Room("Next", "Next room");
+            world.AddRoom(start);
+            world.AddRoom(next);
+            world.Connect("Start", Direction.Up, "Next");
+            world.SetStart("Start");
+
+            world.Go(Direction.Up);
+            var result = world.GoBack();
+
+            StringAssert.Contains(result, "Start");
+        }
+
+        [TestMethod]
+        public void GoBack_ShouldFail_WhenNoPreviousRoom()
+        {
+            var world = new World();
+            var start = new Room("Start", "Start room");
+            world.AddRoom(start);
+            world.SetStart("Start");
+
+            var result = world.GoBack();
+
+            StringAssert.Contains(result, "You can't go back.");
+        }
+        [TestMethod]
+        public void GoBack_ShouldFail_WhenCalledTwice()
+        {
+            var world = new World();
+            var start = new Room("Start", "Start room");
+            var next = new Room("Next", "Next room");
+            world.AddRoom(start);
+            world.AddRoom(next);
+            world.Connect("Start", Direction.Up, "Next");
+            world.SetStart("Start");
+
+            world.Go(Direction.Up);
+            world.GoBack();
+            var result = world.GoBack();
+
+            StringAssert.Contains(result, "You can't go back.");
+        }
+
+        [TestMethod]
+        public void GoBackCommand_IsCaseInsensitive()
+        {
+            var world = new World();
+            var start = new Room("Start", "Start room");
+            var next = new Room("Next", "Next room");
+            world.AddRoom(start);
+            world.AddRoom(next);
+            world.Connect("Start", Direction.Up, "Next");
+            world.SetStart("Start");
+
+            world.Go(Direction.Up);
+
+            var terminal = new CommandManager<string?>(() => { });
+            terminal.AddCommand("go", arg => {
+                if (arg != null && arg.Equals("back", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine(world.GoBack());
+                }
+                return Task.FromResult(0);
+            }, "Go back");
+
+            using (var sw = new System.IO.StringWriter())
+            {
+                Console.SetOut(sw);
+                terminal.TryCommand("go", "BACK");
+                var result = sw.ToString();
+                StringAssert.Contains(result, "Start");
+            }
         }
     }
 }

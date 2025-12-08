@@ -45,7 +45,13 @@ namespace API.Controllers
                 return BadRequest(new { message = "Username bestaat al" });
             }
 
-            return Ok(new { message = "Registratie succesvol", username = request.Username });
+            return Ok(new RegisterResponse
+            {
+                Success = true,
+                Message = "Registratie succesvol",
+                Username = request.Username,
+                Role = request.Role
+            });
         }
 
         [HttpPost("login")]

@@ -26,7 +26,7 @@ namespace API
 
             // Voeg services toe
             builder.Services.AddSingleton<IUserService, UserService>();
-            builder.Services.AddSingleton<IKeyService, KeyService>();
+
 
             // JWT Authentication
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -96,6 +96,7 @@ namespace API
 
             app.MapControllers();
 
+            Console.WriteLine("Application started. Press Ctrl+C to shut down.");
             app.Run();
         }
     }

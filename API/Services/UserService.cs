@@ -1,4 +1,5 @@
 ﻿using API.Models;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -6,7 +7,7 @@ namespace API.Services
 {
     public class UserService : IUserService
     {
-        private readonly List<User> _users = new List<User>();
+        private readonly ConcurrentDictionary<string, User> _users = new(StringComparer.OrdinalIgnoreCase);
         private const int MaxFailedAttempts = 3;
 
         public bool RegisterUser(string username, string password, string role)
@@ -15,46 +16,33 @@ namespace API.Services
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 return false;
 
-            // Check of username al bestaat
-            if (_users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
-                return false;
+            // Simplified role validation: Default to "Player" unless "Admin" is specified (case-insensitive).
+            var assignedRole = string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "Player";
 
-            // Valideer rol (case-insensitive)
-            if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) &&
-                !string.Equals(role, "Player", StringComparison.OrdinalIgnoreCase))
-            {
-                role = "Player";
-            }
-            else if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
-            {
-                role = "Admin"; // Zorg ervoor dat de rol consistent "Admin" is
-            }
-            else
-            {
-                role = "Player"; // Zorg ervoor dat de rol consistent "Player" is
-            }
-
+            // Generate a salt
+            var salt = GenerateSalt();
             // Hash het wachtwoord met SHA-256
-            var passwordHash = HashPassword(password);
+            var passwordHash = HashPassword(password, salt);
 
             // Maak nieuwe user
             var user = new User
             {
                 Username = username,
                 PasswordHash = passwordHash,
-                Role = role,
+                PasswordSalt = salt,
+                Role = assignedRole,
                 FailedLoginAttempts = 0,
                 IsLockedOut = false
             };
-
-            _users.Add(user);
-            return true;
+            
+            // If the key (username) already exists, TryAdd returns false.
+            return _users.TryAdd(username, user);
         }
 
         public User? GetUser(string username)
         {
-            return _users.FirstOrDefault(u =>
-                u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            _users.TryGetValue(username, out var user);
+            return user;
         }
 
         public bool ValidatePassword(string username, string password)
@@ -62,7 +50,7 @@ namespace API.Services
             var user = GetUser(username);
             if (user == null) return false;
 
-            var hashedInput = HashPassword(password);
+            var hashedInput = HashPassword(password, user.PasswordSalt);
             return user.PasswordHash == hashedInput;
         }
 
@@ -93,15 +81,26 @@ namespace API.Services
             var user = GetUser(username);
             return user?.IsLockedOut ?? false;
         }
+        
+        private string GenerateSalt()
+        {
+            var bytes = RandomNumberGenerator.GetBytes(16);
+            return Convert.ToHexString(bytes);
+        }
 
-        private string HashPassword(string password)
+        private string HashPassword(string password, string salt)
         {
             using (var sha256 = SHA256.Create())
             {
-                var bytes = Encoding.UTF8.GetBytes(password);
+                var bytes = Encoding.UTF8.GetBytes(password + salt);
                 var hash = sha256.ComputeHash(bytes);
                 return Convert.ToHexString(hash);
             }
+        }
+
+        public IEnumerable<User> GetAllUsers()
+        {
+            return _users.Values;
         }
     }
 }

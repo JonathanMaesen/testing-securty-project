@@ -1,11 +1,12 @@
-﻿namespace API.Models
+namespace API.Models;
+
+public class User
 {
-    public class User
-    {
-        public string Username { get; set; } = string.Empty;
-        public string PasswordHash { get; set; } = string.Empty;
-        public string Role { get; set; } = "Player"; // Player of Admin
-        public int FailedLoginAttempts { get; set; } = 0;
-        public bool IsLockedOut { get; set; } = false;
-    }
+    public int Id { get; set; }
+    public string? Username { get; set; }
+    public string? PasswordHash { get; set; }
+    public string? PasswordSalt { get; set; }
+    public string? Role { get; set; }
+    public int FailedLoginAttempts { get; set; }
+    public bool IsLockedOut { get; set; }
 }

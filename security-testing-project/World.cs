@@ -8,11 +8,11 @@ public interface IGameworld
     string Look();
     string GetInventoryDescription();
     string Take(string itemName);
-    Task<string> Go(Direction dir); // Changed to async Task<string>
+    string Go(Direction dir);
+    string GoBack();
     string Fight();
     bool IsGameOver { get; }
     bool IsWin { get; }
-
 }
 
 public sealed class World : IGameworld
@@ -56,7 +56,7 @@ public sealed class World : IGameworld
         return $"You took the {item.Name}.\n{Look()}";
     }
 
-    public async Task<string> Go(Direction dir) // Changed to async Task<string>
+    public string Go(Direction dir)
     {
         if (Current.Monster is { IsAlive: true })
         {
@@ -72,40 +72,29 @@ public sealed class World : IGameworld
                 return "You fall into a deadly pit and die.";
             }
 
+            Player.PreviousRoom = Current;
+
             if (nextRoom.IsEncrypted && nextRoom.DecryptedContent == string.Empty)
             {
-                // 1. Prompt the user for the passphrase
-                Console.WriteLine("This room is sealed by a magical barrier. Please enter the passphrase:");
-                var passphrase = Console.ReadLine() ?? string.Empty;
+                // 1. Prompt for certificate path and password
+                Console.WriteLine("This room is sealed. Please provide your credentials to enter.");
+                Console.Write("Enter path to your certificate file (.pfx): ");
+                var certPath = Console.ReadLine() ?? string.Empty;
+                Console.Write("Enter certificate password: ");
+                var certPassword = Console.ReadLine() ?? string.Empty;
 
-                // 2. Fetch the keyshare from the API
-                var roomId = nextRoom.EncryptedContentFile?.Replace(".enc", "") ?? "unknown";
-                var (success, responseJson, message) = await ApiService.GetAuthenticatedAsync($"api/keys/keyshare/{roomId}");
 
-                if (!success)
-                {
-                    return $"You are not authorized to enter this room. The API responded: {message}";
-                }
-                
-                var keyShareResponse = System.Text.Json.JsonSerializer.Deserialize<KeyShareResponse>(responseJson ?? "{}");
-                var keyShare = keyShareResponse?.KeyShare;
-
-                if (string.IsNullOrEmpty(keyShare))
-                {
-                    return "Could not retrieve the necessary keyshare from the API.";
-                }
-
-                // 3. Attempt decryption with keyshare and passphrase
+                // 2. Attempt decryption
                 var encryptedFilePath = Path.Combine(AppContext.BaseDirectory, nextRoom.EncryptedContentFile!);
-                if (CryptoHelper.TryDecryptRoomContent(encryptedFilePath, keyShare, passphrase, out var decryptedContent))
+                if (CryptoHelper.TryDecryptRoomContentWithCert(encryptedFilePath, certPath, certPassword, out var decryptedContent))
                 {
                     nextRoom.DecryptedContent = decryptedContent;
                     Current = nextRoom;
-                    return $"The passphrase is correct! The barrier dissolves.\n{Look()}";
+                    return $"The certificate is valid! The barrier dissolves.\n{Look()}";
                 }
                 else
                 {
-                    return $"The passphrase was incorrect. The magical barrier remains. Error: {decryptedContent}";
+                    return $"The certificate or password was incorrect. The barrier remains. Error: {decryptedContent}";
                 }
             }
             else if (nextRoom.IsEncrypted && nextRoom.DecryptedContent != string.Empty)
@@ -149,6 +138,18 @@ public sealed class World : IGameworld
         return $"You can't go that way. \n{Look()}";
     }
 
+    public string GoBack()
+    {
+        if (Player.PreviousRoom == null)
+        {
+            return "You can't go back.";
+        }
+
+        Current = Player.PreviousRoom;
+        Player.PreviousRoom = null;
+        return Look();
+    }
+
     public string Fight()
     {
         if (Current.Monster == null)
@@ -164,13 +165,4 @@ public sealed class World : IGameworld
         Current.Monster.ReceiveDamage();
         return $"You fight the {Current.Monster.Name} and defeat it!\n{Look()}";
     }
-
-    // Removed GetSimulatedKeyShare method
-}
-
-// Added for keyshare API response deserialization
-public class KeyShareResponse
-{
-    public string? RoomId { get; set; }
-    public string? KeyShare { get; set; }
 }
