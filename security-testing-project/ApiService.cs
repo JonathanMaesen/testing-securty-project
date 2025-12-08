@@ -17,8 +17,8 @@ namespace security_testing_project
         public ApiService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            // Base address for the API - adjust if your API runs on a different port or URL
-            _httpClient.BaseAddress = new Uri("http://localhost:5263"); // Example API URL
+            // Basisadres voor de API - pas aan als de API op een andere poort of URL draait
+            _httpClient.BaseAddress = new Uri("http://localhost:5263"); // Voorbeeld API URL
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
@@ -58,23 +58,23 @@ namespace security_testing_project
                     if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
                     {
                         SetJwtToken(loginResponse.Token, loginResponse.Username ?? username, loginResponse.Role ?? "Player");
-                        return (true, "Login successful.");
+                        return (true, "Login succesvol.");
                     }
-                    return (false, "Login failed: Invalid response from API.");
+                    return (false, "Login mislukt: Ongeldig antwoord van de API.");
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return (false, $"Login failed: {response.ReasonPhrase} - {errorContent}");
+                    return (false, $"Login mislukt: {response.ReasonPhrase} - {errorContent}");
                 }
             }
             catch (HttpRequestException ex)
             {
-                return (false, $"Login failed due to network error: {ex.Message}. Is the API running?");
+                return (false, $"Login mislukt door netwerkfout: {ex.Message}. Draait de API wel?");
             }
             catch (Exception ex)
             {
-                return (false, $"An unexpected error occurred during login: {ex.Message}");
+                return (false, $"Een onverwachte fout is opgetreden tijdens het inloggen: {ex.Message}");
             }
         }
 
@@ -88,37 +88,37 @@ namespace security_testing_project
                 var response = await _httpClient.PostAsync("api/Auth/register", jsonContent, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
-                // Attempt to deserialize the response, regardless of status code, as the body may contain useful info.
+                // Probeer de response te deserialiseren, ongeacht de statuscode, omdat de body nuttige info kan bevatten.
                 var registerResponse = JsonConvert.DeserializeObject<RegisterResponse>(responseContent);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    // If there's a message in the deserialized response, use it, otherwise return the raw content.
+                    // Als er een bericht is in de gedeserialiseerde response, gebruik dat, anders de rauwe content.
                     return (false, registerResponse?.Message ?? responseContent);
                 }
 
                 if (registerResponse is { Success: true })
                 {
-                    return (true, registerResponse.Message ?? "Registration successful.");
+                    return (true, registerResponse.Message ?? "Registratie succesvol.");
                 }
-                return (false, registerResponse?.Message ?? "Registration failed: Invalid response from API.");
+                return (false, registerResponse?.Message ?? "Registratie mislukt: Ongeldig antwoord van de API.");
             }
             catch (HttpRequestException ex)
             {
-                return (false, $"Registration failed due to network error: {ex.Message}. Is the API running?");
+                return (false, $"Registratie mislukt door netwerkfout: {ex.Message}. Draait de API wel?");
             }
             catch (Exception ex)
             {
-                return (false, $"An unexpected error occurred during registration: {ex.Message}");
+                return (false, $"Een onverwachte fout is opgetreden tijdens het registreren: {ex.Message}");
             }
         }
 
         public async Task<(bool Success, List<UserDto>? Users, string Message)> GetAllUsersAsync(CancellationToken cancellationToken = default)
         {
-            // Ensure the user is logged in, as this endpoint is likely protected.
+            // Zorg ervoor dat de gebruiker is ingelogd, aangezien dit endpoint waarschijnlijk is beveiligd.
             if (!IsLoggedIn)
             {
-                return (false, null, "You must be logged in to view users.");
+                return (false, null, "U moet ingelogd zijn om gebruikers te zien.");
             }
 
             try
@@ -129,21 +129,21 @@ namespace security_testing_project
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
                     var users = JsonConvert.DeserializeObject<List<UserDto>>(responseContent);
-                    return (true, users, "Successfully retrieved users.");
+                    return (true, users, "Gebruikers succesvol opgehaald.");
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    return (false, null, $"Failed to get users: {response.ReasonPhrase} - {errorContent}");
+                    return (false, null, $"Ophalen van gebruikers mislukt: {response.ReasonPhrase} - {errorContent}");
                 }
             }
             catch (HttpRequestException ex)
             {
-                return (false, null, $"Network error: {ex.Message}. Is the API running?");
+                return (false, null, $"Netwerkfout: {ex.Message}. Draait de API wel?");
             }
             catch (Exception ex)
             {
-                return (false, null, $"An unexpected error occurred: {ex.Message}");
+                return (false, null, $"Een onverwachte fout is opgetreden: {ex.Message}");
             }
         }
 

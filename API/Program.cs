@@ -28,7 +28,7 @@ namespace API
             builder.Services.AddSingleton<IUserService, UserService>();
 
 
-            // JWT Authentication
+            // JWT Authenticatie
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -45,7 +45,7 @@ namespace API
                 });
 
             builder.Services.AddAuthorization();
-            // Add services to the container.
+            // Voeg services toe aan de container.
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -81,7 +81,7 @@ namespace API
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Configureer de HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();

@@ -2,10 +2,11 @@
 
 internal static class Program
 {
-    /// This class contains the main entry point of the game. It sets up the initial
-    /// game state, defines the player commands, and runs the core loop that reads
-    /// player input and updates the game world. It also handles the win and game-over
-    /// conditions, including restarting the game on death.
+    /// <summary>
+    /// Hoofdklasse van het spel. Verantwoordelijk voor het initialiseren van de game state,
+    /// het definiëren van commando's en het uitvoeren van de game loop die de input
+    /// van de speler verwerkt. Regelt ook de win- en game-over-condities.
+    /// </summary>
     private static async Task Main()
     {
         var httpClient = new HttpClient();
