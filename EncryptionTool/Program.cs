@@ -59,8 +59,8 @@ class Program
     private static void PrintUsage()
     {
         Console.WriteLine("Usage:");
-        Console.WriteLine("  dotnet run --project EncryptionTool/EncryptionTool.csproj -- generate-cert <output-path> <password>");
-        Console.WriteLine("  dotnet run --project EncryptionTool/EncryptionTool.csproj -- encrypt <inputFile> <outputFile> <cert-path> [cert-password]");
+        Console.WriteLine("dotnet run --project EncryptionTool/EncryptionTool.csproj -- generate-cert <output-path> <password>");
+        Console.WriteLine("dotnet run --project EncryptionTool/EncryptionTool.csproj -- encrypt <inputFile> <outputFile> <cert-path> [cert-password]");
     }
 
     private static void GenerateAndSaveCertificate(string outputPath, string password)

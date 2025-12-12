@@ -96,7 +96,6 @@ public sealed class World : IGameworld
                 // 2. Fetch Keyshare from API
                 Console.WriteLine("Contacting API to retrieve Keyshare...");
                 string? keyShare = await _apiService.GetKeyShareAsync(nextRoom.EncryptedContentFile!.Replace(".enc", "")); 
-                // Note: Assuming roomId matches filename without extension, e.g., "room_secret"
 
                 if (string.IsNullOrEmpty(keyShare))
                 {
@@ -114,9 +113,7 @@ public sealed class World : IGameworld
                 
                 // 5. Decrypt
                 var encryptedFilePath = Path.Combine(AppContext.BaseDirectory, nextRoom.EncryptedContentFile!);
-                // We reuse the existing cert logic, but the 'password' is now our derived hash
-                // Note: You must assume the user has the .pfx file locally, protected by this specific hash.
-                // For this assignment, we often just pass the path to the PFX.
+                
                 Console.Write("Enter path to your certificate file (.pfx): ");
                 var certPath = Console.ReadLine() ?? string.Empty;
 
