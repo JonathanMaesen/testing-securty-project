@@ -1,3 +1,8 @@
+using System;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks; // Added for async operations
+
 namespace security_testing_project;
 
 public interface IGameworld
@@ -5,21 +10,28 @@ public interface IGameworld
     string Look();
     string GetInventoryDescription();
     string Take(string itemName);
-    string Go(Direction dir);
+    Task<string> Go(Direction dir);
+    string GoBack();
     string Fight();
     bool IsGameOver { get; }
     bool IsWin { get; }
-
 }
 
 public sealed class World : IGameworld
 {
     private readonly Dictionary<string, Room> _rooms = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ApiService _apiService;
 
     private Room Current { get; set; } = null!;
     private Player Player { get; } = new();
     public bool IsGameOver { get; private set; }
     public bool IsWin { get; private set; }
+    
+    public World(ApiService apiService)
+    {
+        _apiService = apiService;
+    }
+
     public void AddRoom(Room room) => _rooms[room.Name] = room;
     private Room Get(string name) => _rooms[name];
     public void Connect(string from, Direction direction, string to)
@@ -53,7 +65,7 @@ public sealed class World : IGameworld
         return $"You took the {item.Name}.\n{Look()}";
     }
 
-    public string Go(Direction dir)
+    public async Task<string> Go(Direction dir)
     {
         if (Current.Monster is { IsAlive: true })
         {
@@ -69,36 +81,54 @@ public sealed class World : IGameworld
                 return "You fall into a deadly pit and die.";
             }
 
-            if (nextRoom.IsEncrypted && nextRoom.DecryptedContent == string.Empty)
-            {
-                string simulatedUserRole = "Player"; 
-                
-                string roomId = nextRoom.EncryptedContentFile?.Replace(".enc", "") ?? "unknown";
-                string keyshare = GetSimulatedKeyShare(roomId, simulatedUserRole); 
+            Player.PreviousRoom = Current;
 
-                if (string.IsNullOrEmpty(keyshare))
+            if (nextRoom.IsEncrypted && string.IsNullOrEmpty(nextRoom.DecryptedContent))
+            {
+                Console.WriteLine($"\n[SECURITY] The room '{nextRoom.Name}' is encrypted.");
+                
+                // 1. Check API Connection / Login
+                if (!_apiService.IsLoggedIn)
                 {
-                    return "De kamer is versleuteld en u bent niet geautoriseerd om de keyshare op te halen (Rol te laag).";
+                    return "Access Denied: You must be logged in to access encrypted rooms.";
                 }
 
-                string decryptionKey = CryptoHelper.GenerateDecryptionKey(keyshare);
+                // 2. Fetch Keyshare from API
+                Console.WriteLine("Contacting API to retrieve Keyshare...");
+                string? keyShare = await _apiService.GetKeyShareAsync(nextRoom.EncryptedContentFile!.Replace(".enc", "")); 
 
-                if (CryptoHelper.TryDecryptRoomContent(nextRoom.EncryptedContentFile!, decryptionKey, out var decryptedContent))
+                if (string.IsNullOrEmpty(keyShare))
+                {
+                    return "Access Denied: The API refused to give you the keyshare (Are you authorized?).";
+                }
+
+                // 3. Ask User for Passphrase
+                Console.Write("Keyshare acquired. Enter your personal Passphrase: ");
+                var passphrase = Console.ReadLine() ?? string.Empty;
+
+                // 4. Derive the Key (Certificate Password)
+                // Requirement: SHA256(keyshare + ":" + passphrase)
+                var combinedSecret = $"{keyShare}:{passphrase}";
+                var certPassword = ComputeSha256Hash(combinedSecret);
+                
+                // 5. Decrypt
+                var encryptedFilePath = Path.Combine(AppContext.BaseDirectory, nextRoom.EncryptedContentFile!);
+                
+                Console.Write("Enter path to your certificate file (.pfx): ");
+                var certPath = Console.ReadLine() ?? string.Empty;
+
+                if (CryptoHelper.TryDecryptRoomContentWithCert(encryptedFilePath, certPath, certPassword, out var decryptedContent))
                 {
                     nextRoom.DecryptedContent = decryptedContent;
                     Current = nextRoom;
-                    return $"Succes! De kamerinhoud is ontsleuteld met de Keyshare.\n{Look()}";
+                    return $"Decrypt Success! The barrier dissolves.\n{Look()}";
                 }
                 else
                 {
-                    return "Decryptie mislukt. De sleutel is onjuist of het bestand is beschadigd.";
+                    return $"Decryption Failed. (Error: {decryptedContent})";
                 }
             }
-            else if (nextRoom.IsEncrypted && nextRoom.DecryptedContent != string.Empty)
-            {
-                 Current = nextRoom;
-                 return Look();
-            }
+            
             if (nextRoom is { RequiresKey: true, IsUnlocked: false })
             {
                 if (Player.Inventory.HasType(ItemType.Key))
@@ -135,6 +165,18 @@ public sealed class World : IGameworld
         return $"You can't go that way. \n{Look()}";
     }
 
+    public string GoBack()
+    {
+        if (Player.PreviousRoom == null)
+        {
+            return "You can't go back.";
+        }
+
+        Current = Player.PreviousRoom;
+        Player.PreviousRoom = null;
+        return Look();
+    }
+
     public string Fight()
     {
         if (Current.Monster == null)
@@ -151,24 +193,12 @@ public sealed class World : IGameworld
         return $"You fight the {Current.Monster.Name} and defeat it!\n{Look()}";
     }
 
-    private string GetSimulatedKeyShare(string roomId, string userRole)
+    private static string ComputeSha256Hash(string rawData)
     {
-        const string roomSecretShare = "SecretKeyShare123ForRoom1";
-        const string roomAdminShare = "AdminOnlyKeyShare789ForRoom3";
-
-        if (roomId.Equals("room_secret", StringComparison.OrdinalIgnoreCase))
+        using (SHA256 sha256Hash = SHA256.Create())
         {
-            return roomSecretShare;
+            byte[] bytes = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+            return Convert.ToHexString(bytes); // Returns uppercase Hex
         }
-
-        if (roomId.Equals("room_admin", StringComparison.OrdinalIgnoreCase))
-        {
-            if (userRole.Equals("Admin", StringComparison.OrdinalIgnoreCase))
-            {
-                return roomAdminShare;
-            }
-        }
-        
-        return string.Empty;
     }
 }

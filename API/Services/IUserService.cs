@@ -10,5 +10,6 @@ namespace API.Services
         void IncrementFailedAttempts(string username);
         void ResetFailedAttempts(string username);
         bool IsLockedOut(string username);
+        IEnumerable<User> GetAllUsers();
     }
 }

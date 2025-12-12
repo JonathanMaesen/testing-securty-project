@@ -1,21 +1,31 @@
 using security_testing_project;
+using System.Net.Http;
+using Moq;
 
 namespace SecurityProject.MSTests
 {
     [TestClass]
     public sealed class WorldTests
     {
+        private Mock<ApiService> _mockApiService = null!;
+
+        [TestInitialize]
+        public void Setup()
+        {
+            _mockApiService = new Mock<ApiService>(new HttpClient());
+        }
+
         [TestMethod]
         public void WorldGenerates()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             Assert.IsTrue(world is IGameworld);
         }
 
         [TestMethod]
         public void AddRoomWorks()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var room1 = new Room("Entrance", "Start here");
             var room2 = new Room("Hall", "Corridor");
 
@@ -30,7 +40,7 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void SetStart()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var start = new Room("Start", "The starting room");
             world.AddRoom(start);
 
@@ -44,7 +54,7 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void ErrorWhenRoomsNotConnectedRight()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var room = new Room("Hall", "Corridor");
             world.AddRoom(room);
 
@@ -57,7 +67,7 @@ namespace SecurityProject.MSTests
         [TestMethod]
         public void ErrorWhenRoomsNotConnected()
         {
-            var world = new World();
+            var world = new World(_mockApiService.Object);
             var room = new Room("Entrance", "Start");
             world.AddRoom(room);
 

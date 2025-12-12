@@ -1,44 +1,35 @@
-# Text-Based Adventure Game Documentation
+# Text-Based Adventure Game & Security API
 
-Made by Sander De Moor, Nils Mertens, & Jonathan Maesen
-
-GitHub: https://github.com/JonathanMaesen/testing-securty-project
----
-
-## 1. World Structure
-
-The game world is a dynamic environment constructed from a network of interconnected **`Room`** objects. This design allows for complex and expandable maps that players can explore.
-
-#### 1.1 Rooms
-
-A `Room` is the fundamental building block of the game world. Each room has the following characteristics:
-
-- **Name and Description**: A title and descriptive text that informs the player about their surroundings.
-- **Exits**: Connections to other rooms, defined by a `Direction` (*Up*, *Down*, *Left*, *Right*).
-- **Items**: A room can contain one or more `Item` objects that the player can pick up.
-- **Monster**: A room may be inhabited by a `Monster`.
-- **Special Properties**:
-  - `IsDeadly`: If `true`, entering the room results in immediate death.
-  - `RequiresKey`: If `true`, the room is initially locked and requires a `Key` type item to enter.
-- **Dynamic Descriptions**: Rooms can have alternate descriptions that are displayed under specific conditions:
-  - `DescriptionWhenEmpty`: Shown after an item has been taken from the room.
-  - `DescriptionWhenMonsterDefeated`: Shown after a monster in the room has been defeated.
-
-#### 1.2 World Composition
-
-The entire game world is instantiated in the `Program.cs` file within the `CreateTestWorld` method. This centralizes the world-building process and is responsible for:
-1.  Instantiating all `Room` objects.
-2.  Populating rooms with `Item` and `Monster` objects.
-3.  Connecting the rooms by defining their `Exits`.
-4.  Setting the player's starting room.
+This project contains a classic text-based adventure game and a secure ASP.NET Core Web API for user authentication. The solution is divided into multiple projects, including the game, the API, and testing utilities.
 
 ---
 
-## 2. Game Mechanics
+## 1. Text-Based Adventure Game
 
-The game is played by typing commands into the console. The core game loop reads player input, executes the corresponding action, and updates the game state in real-time.
+The text-based adventure game is a console application where players explore a world, interact with objects, and fight monsters. The game requires authentication against the Web API to play.
 
-#### 2.1 Player Commands
+### 1.1 How to Run the Game
+
+Before running the game, ensure the **Web API is already running**, as the game needs to connect to it for authentication.
+
+To start the game, navigate to the project's root directory in your terminal and run the following command:
+
+```bash
+dotnet run --project security-testing-project/security-testing-project.csproj
+```
+
+### 1.2 In-Game Registration and Login
+
+When the game starts, you must first **register** a new user or **login** with an existing one.
+
+1.  **Register**: Choose the "Register" option. You will be prompted to enter a new username, password, and an optional role (`Player` or `Admin`). Since the API uses an in-memory store, you will need to register a new user each time the API restarts.
+2.  **Login**: After registering, or if you already have a user from the current API session, choose the "Login" option and enter your credentials.
+
+Once authenticated, the adventure begins.
+
+### 1.3 Game Mechanics
+
+#### Player Commands
 
 | Command             | Description                                                   |
 | ------------------- | ------------------------------------------------------------- |
@@ -50,81 +41,93 @@ The game is played by typing commands into the console. The core game loop reads
 | `help`              | Lists all available commands.                                 |
 | `quit`              | Exits the game.                                               |
 
-#### 2.2 Combat
+#### Encrypted Rooms
 
-- Combat is initiated in one of two ways:
-  1.  The player explicitly uses the `fight` command.
-  2.  The player enters a room that contains a `Monster`.
-- **Winning Combat**: If the player has a `Weapon` type item in their inventory, they will defeat the monster.
-- **Losing Combat**: If the player does not have a weapon, they will die, and the game will be over.
-- **Fleeing**: Attempting to leave a room while an undefeated monster is present also results in a game over.
+Some rooms in the game are encrypted. To enter them, you need to complete a security challenge:
+1.  When you try to enter an encrypted room, the game will automatically contact the API to fetch a **Keyshare**.
+2.  You will then be prompted to enter a **Passphrase**.
+3.  The game combines the Keyshare and your Passphrase to derive a decryption key.
+4.  Finally, you must provide the path to your personal certificate file (`.pfx`), which is protected by this derived key.
 
-#### 2.3 Winning and Losing
-
-- **Win Condition**: The game is won by entering the **"Treasure Room,"** which requires a key for access.
-- **Game Over Conditions**:
-  1.  Entering a room where `IsDeadly` is `true`.
-  2.  Engaging in combat with a monster without a `Weapon`.
-  3.  Attempting to move out of a room while a monster is present.
-- **Restart Mechanism**: Upon a "Game Over," the game automatically restarts after a short delay, creating a fresh world instance.
-
-#### 2.4 Console Experience
-
-- **Clear Interface**: The console clears after every command to provide a clean and focused view of the current game state.
-- **Error Handling**: If an unknown command is entered, the game displays an error message and then redisplays the current room's description, so the player never loses context.
+If the derived key correctly unlocks your certificate, the room will be decrypted, and you can enter.
 
 ---
 
-## 3. Class Overview
+## 2. Web API for User Authentication
 
-The project follows an object-oriented design, with each class having a distinct and well-defined responsibility.
+The `API` project is a secure ASP.NET Core Web API that provides user registration, login, and keyshare distribution functionality using JWT.
 
-![Class Diagram](security-testing-project/img.png)
+### 2.1 Setup and Configuration
 
-- **`Program.cs`**: The main entry point of the application. It contains the primary game loop, handles command-line input, and initiates the game world.
+#### Prerequisites
 
-- **`World.cs`**: The core of the game engine. It manages the game state, including the collection of all rooms and the player's current location. It implements the logic for all player actions.
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later.
 
-- **`Room.cs`**: Defines a single location in the game. It holds its own description, exits, items, and an optional monster, and is responsible for generating its own descriptive text.
+#### Step 1: Configure the JWT Secret
 
-- **`Player.cs`**: Represents the player character, holding their `Inventory`.
+1.  Navigate to the `API` directory.
+2.  Create a file named `appsettings.Development.json`.
+3.  Add the following JSON, replacing the placeholder with a strong secret:
+    ```json
+    {
+      "JWT_SECRET_KEY": "YOUR_SUPER_SECRET_KEY_GOES_HERE"
+    }
+    ```
 
-- **`Monster.cs`**: Represents a hostile creature. It has a name and a status indicating whether it `IsAlive`.
+### 2.2 How to Run the API
 
-- **`Item.cs`**: Defines an object that can be found and picked up. Items have a `Name`, `Description`, and `ItemType` (e.g., `Weapon`, `Key`).
-
-- **`Inventory.cs`**: The `PlayerInventory` class manages the items the player is carrying and provides helper methods to check for specific item types.
-
-- **`Direction.cs`**: Defines the possible directions of movement (*Up*, *Down*, *Left*, *Right*), ensuring type safety for room connections.
-
-- **`console-interfacer.cs`**: Contains the `CommandManager`, a generic utility for registering and processing text-based commands. It handles parsing user input and dispatching it to the correct action.
+1.  Open your terminal and navigate to the root of the project.
+2.  Run the command:
+    ```bash
+    dotnet run --project API/API.csproj
+    ```
 
 ---
 
-## 4. How to Run the Game
+## 3. Encryption Tool (For Developers)
 
-This is a .NET console application. To start the game, navigate to the project's root directory in your terminal and run the following command:
+The `EncryptionTool` is a command-line utility for developers to create the encrypted room files (`.enc`) and their corresponding certificates (`.pfx`).
 
+### 3.1 The Decryption Key Explained
+
+The password for the certificate (`.pfx` file) is not a simple string. It is **derived** from two pieces of information:
+- A **Keyshare** (provided by the API, e.g., `"Share_For_Players_123"`)
+- A **Passphrase** (a secret known by the player, e.g., `"apple"`)
+
+The final password is the `SHA256` hash of these two values combined with a colon: `SHA256(Keyshare + ":" + Passphrase)`.
+
+### 3.2 How to Create Encrypted Rooms
+
+Here is the developer workflow for creating a new encrypted room.
+
+#### Step 1: Define Your Secrets
+
+Decide on the `roomId`, `keyshare`, and `passphrase` for your new room.
+- **Room ID**: `room_secret`
+- **Keyshare**: `Share_For_Players_123`
+- **Passphrase**: `apple`
+
+#### Step 2: Calculate the Certificate Password
+
+You need to calculate the SHA256 hash of `"Share_For_Players_123:apple"`. You can use any online or local tool to do this. The result will be a long hexadecimal string (e.g., `3A7BD3E2...`).
+
+#### Step 3: Create the Certificate and Encrypted File
+
+Use the `encrypt` command in the `EncryptionTool`. It will automatically generate the certificate if it doesn't exist.
+
+- `<inputFile>`: Your plaintext room content (e.g., `room_secret.txt`).
+- `<outputFile>`: The destination for the encrypted content (e.g., `room_secret.enc`).
+- `<cert-path>`: The path for the certificate to be created (e.g., `certs/room_secret.cer`).
+- `[cert-password]`: The **derived SHA256 hash** you calculated in Step 2.
+
+**Example Command:**
 ```bash
-dotnet run
+dotnet run --project EncryptionTool/EncryptionTool.csproj -- encrypt room_secret.txt room_secret.enc certs/room_secret.cer 3A7BD3E2...
 ```
 
----
+This command will:
+1.  See that `certs/room_secret.cer` does not exist.
+2.  Generate `certs/room_secret.cer` (public key) and `certs/room_secret.pfx` (private key), using the SHA256 hash as the password for the `.pfx` file.
+3.  Encrypt `room_secret.txt` into `room_secret.enc` using the new certificate.
 
-## 5. Testing Approach
-
-The project's primary focus is on robust testing to ensure code quality and correctness. Our testing strategy is divided into three layers:
-
-#### 5.1 Unit Testing
-
-Unit tests are used to validate individual components in isolation. We focused on testing the core logic of classes like `PlayerInventory`, `Room`, and `Item` to ensure their methods behave as expected. For example, we verified that `PlayerInventory.HasItemType()` correctly identifies items and that a `Room` correctly updates its description after a monster is defeated.
-
-#### 5.2 Integration Testing
-
-Integration tests check the collaboration between different classes. We created tests to simulate player actions and verify the entire game state updates correctly. A key test case was ensuring that moving between rooms (`Player` and `World` interaction) and picking up an item (`Player`, `Room`, and `Item` interaction) works seamlessly.
-
-#### 5.3 Behavior-Driven Testing (BDD)
-
-We used a BDD approach with Gherkin syntax to test end-to-end player scenarios. These tests describe a user's journey from a feature-level perspective, making them easy to understand for everyone. Our BDD tests cover the main win/loss conditions:
-- **Winning the game**: A scenario where the player finds the key, defeats the monster, and reaches the treasure room.
-- **Losing the game**: Scenarios for dying in a deadly room, fighting a monster without a weapon, or trying to flee from a monster.
+You can then distribute the `.pfx` file to the player and place the `.enc` file in the game's output directory.

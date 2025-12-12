@@ -1,50 +1,41 @@
-﻿using API.Models;
-using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize] // Vereis JWT voor alle endpoints in deze controller
     public class KeysController : ControllerBase
     {
-        private readonly IKeyService _keyService;
-
-        public KeysController(IKeyService keyService)
+        // In een echte applicatie zouden deze in een database staan.
+        // Voor dit project zijn de hardgecodeerde shares conform de opdracht.
+        private static readonly Dictionary<string, string> KeyShares = new()
         {
-            _keyService = keyService;
-        }
+            // Room ID -> Keyshare
+            { "room_secret", "Share_For_Players_123" },
+            { "room_admin", "Share_For_Admins_999" }
+        };
 
         [HttpGet("keyshare/{roomId}")]
         public IActionResult GetKeyShare(string roomId)
         {
-            // Haal rol uit token
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-            var username = User.FindFirst(ClaimTypes.Name)?.Value;
-
-            if (string.IsNullOrEmpty(userRole) || string.IsNullOrEmpty(username))
+            if (!KeyShares.TryGetValue(roomId, out var share))
             {
-                return Unauthorized(new { message = "Ongeldige token" });
+                return NotFound(new { message = "Keyshare niet gevonden voor deze kamer." });
             }
 
-            // Validatie roomId
-            if (string.IsNullOrWhiteSpace(roomId))
+            // Autorisatiecheck: Alleen Admins mogen de -keyshare van de Admin Room opvragen
+            if (roomId == "room_admin")
             {
-                return BadRequest(new { message = "RoomId is verplicht" });
+                var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                if (role != "Admin")
+                {
+                    return StatusCode(403, new { message = "Toegang geweigerd: U heeft de 'Admin' rol nodig om deze keyshare te verkrijgen." });
+                }
             }
 
-            // Probeer keyshare op te halen
-            var keyShare = _keyService.GetKeyShare(roomId, userRole);
-
-            if (keyShare == null)
-            {
-                return NotFound(new { message = "Room niet gevonden of geen toegang" });
-            }
-
-            return Ok(keyShare);
+            return Ok(new { keyshare = share });
         }
     }
 }
