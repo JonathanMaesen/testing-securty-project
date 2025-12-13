@@ -23,6 +23,15 @@ namespace security_testing_project
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
+        public ApiService(HttpClient httpClient, string url)
+        {
+            _httpClient = httpClient;
+            // Basisadres voor de API - pas aan als de API op een andere poort of URL draait
+            _httpClient.BaseAddress = new Uri(url); // Voorbeeld API URL
+            _httpClient.DefaultRequestHeaders.Accept.Clear();
+            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        }
+
         public bool IsLoggedIn => !string.IsNullOrEmpty(JwtToken);
 
         private void SetJwtToken(string token, string username, string role)
