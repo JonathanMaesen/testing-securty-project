@@ -17,8 +17,6 @@ namespace ApiTests
             _api = new ApiService(httpClient, "http://localhost:3001");
         }
 
-        // ---------------- REGISTER ----------------
-
         [TestMethod]
         public async Task Register_ValidPassword_ReturnsSuccess()
         {
