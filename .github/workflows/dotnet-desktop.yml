@@ -27,8 +27,7 @@ jobs:
         run: |
           mockoon-cli start \
             --data mockoonenv.json \
-            --port 3001 \
-            --daemon
+            --port 3001
 
       # Wait for Mockoon to be ready
       - name: Wait for Mockoon
