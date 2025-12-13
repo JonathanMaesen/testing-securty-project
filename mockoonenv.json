@@ -1,0 +1,381 @@
+{
+  "uuid": "fb6a8d14-e126-4425-bac1-ac31255b16ab",
+  "lastMigration": 33,
+  "name": "Mockoonenv",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 3001,
+  "hostname": "",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "baf4147e-a567-4213-baf3-5354ea1893d7",
+      "type": "http",
+      "documentation": "this path is to register a User/Admin",
+      "method": "post",
+      "endpoint": "api/Auth/register",
+      "responses": [
+        {
+          "uuid": "307ad086-ac35-4fbb-abed-945ff705ab96",
+          "body": "{\r\n  \"success\": true,\r\n  \"message\": \"Registratie succesvol\",\r\n  \"username\": \"{{body 'username'}}\",\r\n  \"role\": \"{{body 'role'}}\"\r\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "158a2328-9afc-4fc7-b292-b0ad3989c950",
+          "body": "{\n  \"message\" : \"Password moet minstens 6 karakters lang zijn\"\n}",
+          "latency": 0,
+          "statusCode": 400,
+          "label": "error password is too short has to be 6 long",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "password.length",
+              "value": "1",
+              "invert": false,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "password.length",
+              "value": "2",
+              "invert": false,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "password.length",
+              "value": "3",
+              "invert": false,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "password.length",
+              "value": "4",
+              "invert": false,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "password.length",
+              "value": "5",
+              "invert": false,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "password.length",
+              "value": "0",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "aabe2687-05d5-4040-9a94-a90af20074d1",
+      "type": "http",
+      "documentation": "this path is to login",
+      "method": "post",
+      "endpoint": "api/Auth/login",
+      "responses": [
+        {
+          "uuid": "33d915c9-c446-466a-a1a0-7da376cdacb2",
+          "body": "{\r\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiTmlscyIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwianRpIjoiYmZlM2FmMDItODRkNi00N2E3LWIyNTgtNmQzNmYzM2E5MWUzIiwiZXhwIjoxNzY1NzI4NzQzLCJpc3MiOiJUZXh0QWR2ZW50dXJlQVBJIiwiYXVkIjoiVGV4dEFkdmVudHVyZUNsaWVudCJ9.w2hRm4L-enS5XnDVU4OFHDgrAbeAwY28SMi90e24dQQ\",\r\n  \"username\": \"testuser\",\r\n  \"role\": \"Admin\"\r\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "3f7fdcf2-23b9-436c-9d99-aa268fa0dfc0",
+          "body": "{\r\n  \"message\": \"Ongeldige inloggegevens\"\r\n}",
+          "latency": 0,
+          "statusCode": 401,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "body",
+              "modifier": "username",
+              "value": "testuser",
+              "invert": true,
+              "operator": "equals"
+            },
+            {
+              "target": "body",
+              "modifier": "password",
+              "value": "password",
+              "invert": true,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "2445fee7-aa95-45d2-a48a-7f73eb064d8d",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/Auth/me",
+      "responses": [
+        {
+          "uuid": "c1e5f1cf-5789-4df6-a15e-5bd023504cff",
+          "body": "{\n  \"username\": \"testuser\",\n  \"role\": \"Admin\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "da08bc2b-8888-4416-92dd-acdb164a37ed",
+          "body": "",
+          "latency": 0,
+          "statusCode": 401,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "header",
+              "modifier": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiTmlscyIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwianRpIjoiYmZlM2FmMDItODRkNi00N2E3LWIyNTgtNmQzNmYzM2E5MWUzIiwiZXhwIjoxNzY1NzI4NzQzLCJpc3MiOiJUZXh0QWR2ZW50dXJlQVBJIiwiYXVkIjoiVGV4dEFkdmVudHVyZUNsaWVudCJ9.w2hRm4L-enS5XnDVU4OFHDgrAbeAwY28SMi90e24dQQ",
+              "invert": true,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "12c6f4e6-2d4f-4275-872d-4db17e85ef38",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/keys/keyshare/:room",
+      "responses": [
+        {
+          "uuid": "54f69bb2-9c45-444d-b49c-8bda89cfdfaa",
+          "body": "{\r\n    \"message\": \"Keyshare niet gevonden voor deze kamer.\"\r\n}",
+          "latency": 0,
+          "statusCode": 404,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "48402593-e1a4-48a9-849a-44dd14b4a49d",
+          "body": "{\r\n  \"keyshare\": \"Share_For_Admins_999\"\r\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "params",
+              "modifier": "room",
+              "value": "room_admin",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        },
+        {
+          "uuid": "53065ca2-47fa-4593-851c-a31299b8f278",
+          "body": "{\r\n    \"keyshare\": \"Share_For_Players_123\"\r\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [
+            {
+              "target": "params",
+              "modifier": "room",
+              "value": "room_secret",
+              "invert": false,
+              "operator": "equals"
+            }
+          ],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": false,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "baf4147e-a567-4213-baf3-5354ea1893d7"
+    },
+    {
+      "type": "route",
+      "uuid": "aabe2687-05d5-4040-9a94-a90af20074d1"
+    },
+    {
+      "type": "route",
+      "uuid": "2445fee7-aa95-45d2-a48a-7f73eb064d8d"
+    },
+    {
+      "type": "route",
+      "uuid": "12c6f4e6-2d4f-4275-872d-4db17e85ef38"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Content-Type",
+      "value": "application/json"
+    },
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
+    },
+    {
+      "key": "Access-Control-Allow-Methods",
+      "value": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS"
+    },
+    {
+      "key": "Access-Control-Allow-Headers",
+      "value": "Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With"
+    }
+  ],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": [],
+  "callbacks": []
+}
