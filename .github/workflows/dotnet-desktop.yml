@@ -8,10 +8,37 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x' # change to your version
+          dotnet-version: '9.0.x'
 
+      # Install Node.js for Mockoon CLI
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Install Mockoon CLI
+      - name: Install Mockoon CLI
+        run: npm install -g @mockoon/cli
+
+      # Start Mockoon in the background on port 3001
+      - name: Start Mockoon
+        run: |
+          mockoon-cli start \
+            --data mockoonenv.json \
+            --port 3001 \
+            --daemon
+
+      # Wait for Mockoon to be ready
+      - name: Wait for Mockoon
+        run: |
+          for i in {1..10}; do
+            curl -s http://localhost:3001 && break
+            sleep 2
+          done
+
+      # Restore, build, and test .NET project
       - run: dotnet restore
       - run: dotnet build --configuration Release
       - run: dotnet test --configuration Release
