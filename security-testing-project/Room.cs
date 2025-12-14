@@ -42,7 +42,7 @@ public class Room(string name, string description)
             lines.Add(DecryptedContent);
         }
 
-        if (monsterDefeated && !string.IsNullOrEmpty(DescriptionWhenMonsterDefeated))
+        else if (monsterDefeated && !string.IsNullOrEmpty(DescriptionWhenMonsterDefeated))
         {
             lines.Add(DescriptionWhenMonsterDefeated);
         }

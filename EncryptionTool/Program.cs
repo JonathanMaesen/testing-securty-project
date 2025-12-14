@@ -10,7 +10,7 @@ class Program
     {
         if (args.Length == 0)
         {
-            PrintUsage();
+            RunDefaultSetup();
             return;
         }
 
@@ -54,6 +54,43 @@ class Program
             Console.WriteLine($"\nERROR: {ex.Message}");
             Console.ResetColor();
         }
+    }
+
+    private static void RunDefaultSetup()
+    {
+        Console.WriteLine("Running default setup based on Tutorial...");
+
+        string secretRoomFile = "room_secret.txt";
+        string adminRoomFile = "room_admin.txt";
+        string secretEncFile = "room_secret.enc";
+        string adminEncFile = "room_admin.enc";
+        string certName = "CMS_Encryption_Key";
+        
+        // Default credentials from Tutorial/API
+        string passphrase = "TheQuickBrownFox";
+        string playerKeyShare = "Share_For_Players_123";
+        
+        // Create dummy content if missing
+        if (!File.Exists(secretRoomFile)) 
+        {
+            File.WriteAllText(secretRoomFile, "The treasure is hidden under the old oak tree in the garden.");
+            Console.WriteLine($"Created dummy file: {secretRoomFile}");
+        }
+        if (!File.Exists(adminRoomFile)) 
+        {
+            File.WriteAllText(adminRoomFile, "ADMIN ONLY: The master password is 'SuperSecret123'.");
+            Console.WriteLine($"Created dummy file: {adminRoomFile}");
+        }
+
+        // Calculate Password: SHA256(keyshare + ":" + passphrase)
+        string password = ComputeSha256Hash($"{playerKeyShare}:{passphrase}");
+        Console.WriteLine($"Derived password for certificate: {password}");
+
+        GenerateAndSaveCertificate(certName, password);
+
+        // Use .cer for encryption (public key only)
+        EncryptAndSaveRoomWithCert(secretRoomFile, secretEncFile, $"{certName}.cer", password);
+        EncryptAndSaveRoomWithCert(adminRoomFile, adminEncFile, $"{certName}.cer", password);
     }
 
     private static void PrintUsage()
@@ -134,5 +171,12 @@ class Program
         Buffer.BlockCopy(encryptedContent, 0, result, 4 + encryptedAesKey.Length + iv.Length, encryptedContent.Length);
 
         return result;
+    }
+
+    private static string ComputeSha256Hash(string rawData)
+    {
+        using var sha256 = SHA256.Create();
+        byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawData));
+        return Convert.ToHexString(bytes);
     }
 }
